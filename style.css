@@ -136,6 +136,10 @@ footer{
     width: auto;
 }
 
+.my-name{
+    text-align: center;
+}
+
 @media (max-width: 1000px) {
 
     .d-flex{
