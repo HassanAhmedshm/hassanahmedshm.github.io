@@ -141,7 +141,10 @@ footer{
 }
 
 @media (max-width: 1000px) {
-
+    .hello {
+        font-size: 3rem;
+        font-weight: bold;
+    }
     .d-flex{
         flex-direction: column;
         height: 200vh;
