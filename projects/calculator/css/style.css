@@ -1,0 +1,52 @@
+.buttons{
+    margin: 5%;
+    display: flex;
+    justify-content: space-around;
+}
+#result{
+    width: 90%;
+    background-color: rgb(255, 255, 255);
+    height: 20vh;
+    margin: auto;
+    color: black;
+    padding: 2%;
+    border-radius: 10px;
+    font-size: xx-large;
+}
+body{
+    background-color: rgb(20, 19, 34);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+    color: white;
+}
+button{
+    height: 7vh;
+    width: 7vw;
+    text-align: center;
+    align-content: center;
+    color: white;
+    border: none;
+    font-size: 2vw;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: rgb(105, 139, 105);
+    border-radius: 5px;
+}
+.calculator{
+    margin: auto;
+    padding: 2%;
+    width: 40vw;
+    border: 2px solid  rgb(105, 139, 105);
+    border-radius: 10px;
+}
+
+#erase{
+    width: 12vw;
+}
+
+#back{
+    width: 12vw;
+}
