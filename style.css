@@ -74,7 +74,10 @@ footer{
     display: flex;
     justify-content: space-around;
 }
-
+.d-flex-footer{
+    display: flex;
+    justify-content: space-around;
+}
 .project{
     height: 250px;
     width: 250px;
@@ -141,6 +144,11 @@ footer{
 }
 
 @media (max-width: 1000px) {
+    .back-button{
+        color: white;
+        text-decoration: none;
+        height: 5%;
+    }
     .hello {
         font-size: 3rem;
         font-weight: bold;
@@ -148,6 +156,10 @@ footer{
     .d-flex{
         flex-direction: column;
         height: 200vh;
+    }
+    .d-flex-footer{
+        flex-direction: column;
+        height: 50vh;
     }
     .school {
         width: 90vw;
