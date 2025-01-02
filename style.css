@@ -32,7 +32,7 @@ section {
     text-align: left;
     background-color: #4a237e;
     color: white;
-    height: 100%;
+    height: 100vh;
     width: 55%;
     align-content: center;
     padding: 2%;
@@ -60,7 +60,7 @@ section {
     align-content: center;
 }
 
-footer{
+footer {
     text-align: center;
     display: flex;
     justify-content: center;
@@ -70,15 +70,17 @@ footer{
     font-size: 1.2em;
 }
 
-.d-flex{
+.d-flex {
     display: flex;
     justify-content: space-around;
 }
-.d-flex-footer{
+
+.d-flex-footer {
     display: flex;
     justify-content: space-around;
 }
-.project{
+
+.project {
     height: 250px;
     width: 250px;
     border-radius: 25px;
@@ -89,7 +91,15 @@ footer{
     justify-content: center;
 }
 
-#rock{
+.hello-section {
+    height: 80vh;
+}
+
+.project-section {
+    height: 50vh;
+}
+
+#rock {
     background-image: url(/projects/images/rock.png);
     background-size: cover;
     background-repeat: no-repeat;
@@ -97,33 +107,33 @@ footer{
 
 }
 
-#calculator{
+#calculator {
     background-image: url(/projects/images/calc.png);
 }
 
-.back{
+.back {
     align-content: center;
     text-align: center;
     height: 10vh;
     margin-bottom: 5%;
 }
 
-.drawings{
+.drawings {
     text-align: center;
 }
 
-.drawing{
+.drawing {
     height: 90vh;
     width: auto;
 }
 
-.nomore{
+.nomore {
     text-align: center;
     font-size: 2em;
     margin-top: 20%;
-}   
+}
 
-.back-button{
+.back-button {
     color: white;
     text-decoration: none;
 }
@@ -134,33 +144,55 @@ footer{
     overflow: hidden;
     align-content: center;
 }
-.me{
+
+.me {
     height: 100%;
     width: auto;
 }
 
-.my-name{
+.my-name {
     text-align: center;
+    height: auto;
+}
+
+.student-section {
+    height: auto;
+}
+
+.d-flex-footer-btn {
+    display: flex;
+    gap: 5px;
+    text-align: center;
+    justify-content: center;
+    align-content: center;
 }
 
 @media (max-width: 1000px) {
-    .back-button{
+    .section {
+        height: auto;
+    }
+
+    .back-button {
         color: white;
         text-decoration: none;
         height: 5%;
     }
+
     .hello {
         font-size: 3rem;
         font-weight: bold;
     }
-    .d-flex{
+
+    .d-flex {
         flex-direction: column;
         height: 200vh;
     }
-    .d-flex-footer{
+
+    .d-flex-footer {
         flex-direction: column;
         height: 50vh;
     }
+
     .school {
         width: 90vw;
         height: auto;
@@ -168,6 +200,7 @@ footer{
         margin: 1%;
         border: #4a237e 2px solid;
     }
+
     .me-section {
         text-align: left;
         background-color: #4a237e;
@@ -177,7 +210,8 @@ footer{
         align-content: center;
         padding: 5%;
     }
-    .drawing{
+
+    .drawing {
         height: auto;
         width: 90vw;
     }
@@ -186,12 +220,12 @@ footer{
 
 
 .appear {
-    opacity: 0; 
-    transform: translateY(20px); 
+    opacity: 0;
+    transform: translateY(20px);
     transition: opacity 0.6s ease-out, transform 0.6s ease-out;
 }
 
 .appear.active {
-    opacity: 1; 
+    opacity: 1;
     transform: translateY(0);
 }
