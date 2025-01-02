@@ -50,21 +50,18 @@ setInterval(() => {
 
 let appear = document.querySelectorAll('appear')
 
-//chatgpt
-
 document.addEventListener("DOMContentLoaded", () => {
     const appearElements = document.querySelectorAll(".appear");
 
     const observerOptions = {
-        threshold: 0.2, // Trigger when 20% of the element is visible
+        threshold: 0.2, 
     };
 
     const observerCallback = (entries, observer) => {
         entries.forEach((entry) => {
             if (entry.isIntersecting) {
-                // Add the 'active' class when the element is visible
                 entry.target.classList.add("active");
-                observer.unobserve(entry.target); // Stop observing once animated
+                observer.unobserve(entry.target);
             }
         });
     };
