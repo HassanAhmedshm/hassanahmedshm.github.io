@@ -224,7 +224,10 @@ footer {
     }
 }
 
-
+img{
+    pointer-events: none;
+    user-select: none;
+}
 
 .appear {
     opacity: 0;
