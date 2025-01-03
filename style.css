@@ -27,7 +27,7 @@ section {
     align-self: center;
 }
 
-.me-div{
+.me-div {
     align-content: center;
     text-align: left;
 }
@@ -103,11 +103,12 @@ footer {
 .project-section {
     height: 50vh;
 }
- 
-.school{
+
+.school {
     border-radius: 10px;
     margin: 2%;
 }
+
 #rock {
     background-image: url(/projects/images/rock.png);
     background-size: cover;
@@ -162,6 +163,7 @@ footer {
 .my-name {
     text-align: center;
     height: auto;
+    overflow:visible;
 }
 
 .student-section {
@@ -174,7 +176,7 @@ footer {
     justify-content: center;
 }
 
-.align-center{
+.align-center {
     align-content: center;
 }
 
@@ -226,9 +228,10 @@ footer {
         height: auto;
         width: 90vw;
     }
+
 }
 
-img{
+img {
     pointer-events: none;
     user-select: none;
 }
@@ -242,4 +245,82 @@ img{
 .appear.active {
     opacity: 1;
     transform: translateY(0);
+}
+
+
+.orbit {
+    position: relative;
+    height: 70vh;
+    margin: auto;
+}
+
+.earth {
+    width: auto;
+    height: 100%;
+    margin: auto;
+    z-index: 1;
+}
+
+.moon1 {
+    font-size: 4rem;
+    color: #4a237e77;
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    z-index: -1;
+    transform: translate(-50%, 0);
+    animation: orbit1 10s linear infinite;
+}
+
+.moon2 {
+    font-size: 4rem;
+    color: #4a237e77;
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    z-index: -1;
+    transform: translate(-50%, 0);
+    animation: orbit2 12s linear infinite;
+}
+
+.moon3 {
+    font-size: 4rem;
+    color: #4a237e77;
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    z-index: -1;
+    transform: translate(-50%, 0);
+    animation: orbit3 15s linear infinite;
+}
+
+@keyframes orbit1 {
+    0% {
+        transform: rotate(0deg) translateX(350px) rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg) translateX(350px) rotate(-360deg);
+    }
+}
+
+@keyframes orbit2 {
+    0% {
+        transform: rotate(360deg) translateX(400px) rotate(-360deg);
+    }
+
+    100% {
+        transform: rotate(0deg) translateX(400px) rotate(0deg);
+ 
+    }
+}
+
+@keyframes orbit3 {
+    0% {
+        transform: rotate(0deg) translateX(550px) rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg) translateX(550px) rotate(-360deg);
+    }
 }
