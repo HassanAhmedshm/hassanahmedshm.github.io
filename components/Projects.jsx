@@ -8,7 +8,7 @@ const projects = [
     title: "AG (Autonomous Agent)",
     description: "A Python-based autonomous agent capable of executing complex terminal commands, file manipulation, and reasoning using Large Language Models. Designed to automate developer workflows.",
     badges: ["Python", "LLM", "Automation", "LangChain"],
-    image: "https://cataas.com/cat",
+    image: " ",
     links: {
       github: "#",
       demo: "#"
@@ -19,7 +19,7 @@ const projects = [
     title: "Optiscan AI",
     description: "Mobile application leveraging computer vision to detect early signs of ocular diseases. Built with React Native and custom Python backend for image processing.",
     badges: ["React Native", "Computer Vision", "Python", "TensorFlow"],
-    image: "https://cataas.com/cat",
+    image: " ",
     links: {
       github: "#",
       demo: "#"
@@ -30,7 +30,7 @@ const projects = [
     title: "LifeTrack AI",
     description: "Comprehensive health dashboard providing personalized insights based on wearable data. Features real-time visualization and predictive health analytics.",
     badges: ["React", "Laravel", "D3.js", "MySQL"],
-    image: "https://cataas.com/cat",
+    image: " ",
     links: {
       github: "#",
       demo: "#"
@@ -47,7 +47,6 @@ const ProjectCard = ({ project, index }) => {
       transition={{ duration: 0.6, delay: index * 0.2 }}
       className="group relative grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-surface/50 border border-border rounded-2xl overflow-hidden hover:border-primary/50 transition-all p-6 md:p-8"
     >
-      {/* Image Section */}
       <div className="relative overflow-hidden rounded-xl h-64 md:h-80 w-full bg-dark">
         <div className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors z-10" />
         <img 
@@ -55,7 +54,6 @@ const ProjectCard = ({ project, index }) => {
           alt={project.title} 
           className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 scale-100 group-hover:scale-105"
         />
-        {/* Floating Play/Action overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
              <div className="bg-black/50 backdrop-blur-sm p-4 rounded-full border border-white/20">
                  <ExternalLink className="w-6 h-6 text-white" />
@@ -63,7 +61,6 @@ const ProjectCard = ({ project, index }) => {
         </div>
       </div>
 
-      {/* Content Section */}
       <div className="flex flex-col space-y-4">
         <h3 className="text-2xl md:text-3xl font-bold text-white group-hover:text-primary transition-colors">
           {project.title}
