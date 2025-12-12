@@ -10,7 +10,7 @@ const projects = [
     badges: ["Python", "LLM", "Automation", "LangChain"],
     image: "/AG.png",
     links: {
-      github: "#",
+      github: "https://github.com/HassanAhmedshm/AG",
       demo: "#"
     }
   },
@@ -21,7 +21,7 @@ const projects = [
     badges: ["Capacitor JS", "Python", "TensorFlow"],
     image: "/optiscan_logo.png",
     links: {
-      github: "#",
+      github: "https://github.com/HassanAhmedshm/optiscan",
       demo: "#"
     }
   },
@@ -32,7 +32,7 @@ const projects = [
     badges: ["flutter"],
     image: "/lifetrack.png",
     links: {
-      github: "#",
+      github: "https://github.com/HassanAhmedshm/Life-track",
       demo: "#"
     }
   }
