@@ -8,7 +8,7 @@ const projects = [
     title: "AG (Autonomous Agent)",
     description: "A Python-based autonomous agent capable of executing complex terminal commands, file manipulation, and reasoning using Large Language Models. Designed to automate developer workflows.",
     badges: ["Python", "LLM", "Automation", "LangChain"],
-    image: "../public/AG.png",
+    image: "/AG.png",
     links: {
       github: "#",
       demo: "#"
@@ -19,7 +19,7 @@ const projects = [
     title: "Optiscan AI",
     description: "Mobile application leveraging computer vision to detect early signs of ocular diseases. Built with React Native and custom Python backend for image processing.",
     badges: ["Capacitor JS", "Python", "TensorFlow"],
-    image: "../public/optiscan_logo.png",
+    image: "/optiscan_logo.png",
     links: {
       github: "#",
       demo: "#"
@@ -30,7 +30,7 @@ const projects = [
     title: "LifeTrack AI",
     description: "Comprehensive health dashboard providing personalized insights based on wearable data. Features real-time visualization and predictive health analytics.",
     badges: ["flutter"],
-    image: "../public/lifetrack.png",
+    image: "/lifetrack.png",
     links: {
       github: "#",
       demo: "#"
