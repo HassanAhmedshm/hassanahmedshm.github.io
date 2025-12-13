@@ -47,7 +47,7 @@ const Navbar = () => {
             </a>
           ))}
           <a
-            href="/public/hassan_CV.pdf"
+            href="/hassan_CV.pdf"
             className="px-4 py-2 text-sm font-medium bg-white text-dark rounded hover:bg-gray-200 transition-colors"
           >
             Download CV
@@ -84,7 +84,7 @@ const Navbar = () => {
                 </a>
               ))}
               <a
-                href="/public/hassan_CV.pdf"
+                href="/hassan_CV.pdf"
                 className="mt-4 px-4 py-3 text-center font-medium bg-primary text-white rounded hover:bg-primary-dark transition-colors"
                 onClick={() => setIsOpen(false)}
               >
