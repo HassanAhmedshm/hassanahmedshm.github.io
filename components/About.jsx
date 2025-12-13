@@ -85,7 +85,7 @@ const About = () => {
             {/* Box 4: Tech Stack */}
             <BentoBox className="md:col-span-3 md:row-span-1" delay={0.4} title="Tech Stack">
                 <div className="flex flex-wrap items-center gap-4 mt-2">
-                    {['React', 'Laravel', 'Python', 'Tailwind', 'Docker', 'MySQL', 'Framer Motion'].map((tech) => (
+                    {['React', 'Laravel', 'Python', 'Tailwind', 'Git','Postman', 'MySQL', 'Framer Motion'].map((tech) => (
                         <span 
                             key={tech} 
                             className="px-4 py-2 bg-[#1a1a1a] border border-border rounded-lg text-gray-300 text-sm font-medium hover:text-white hover:border-primary transition-all cursor-default"

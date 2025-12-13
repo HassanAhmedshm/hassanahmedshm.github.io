@@ -69,7 +69,7 @@ const Hero = () => {
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </a>
             <a
-              href="#"
+              href="/public/hassan_CV.pdf"
               className="px-6 py-3 bg-surface border border-border text-gray-300 font-medium rounded hover:bg-border transition-all flex items-center gap-2"
             >
               <FileText className="w-4 h-4" />
