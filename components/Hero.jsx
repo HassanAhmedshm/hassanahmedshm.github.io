@@ -40,13 +40,6 @@ const Hero = () => {
           transition={{ duration: 0.8 }}
           className="space-y-6"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-mono">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-            </span>
-            Available for hire
-          </div>
 
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white leading-tight">
             Hi, I'm <br />
@@ -56,7 +49,7 @@ const Hero = () => {
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-400 font-mono h-16">
-            <span className="text-primary">{'>'}</span> <TypewriterText text="Building Intelligent Web Systems & AI Agents." delay={500} />
+            <span className="text-primary">{'>'}</span> <TypewriterText text="Full Stack Developer & Prompt Engineer" delay={500} />
             <span className="animate-pulse">_</span>
           </p>
 
@@ -69,11 +62,13 @@ const Hero = () => {
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </a>
             <a
-              href="/hassan_CV.pdf"
+              href="https://drive.google.com/file/d/1I4ZAJ4AnQ0LI9CQF46GJgAuCXZwaZBKf/view?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
               className="px-6 py-3 bg-surface border border-border text-gray-300 font-medium rounded hover:bg-border transition-all flex items-center gap-2"
             >
               <FileText className="w-4 h-4" />
-              Download CV
+              View CV
             </a>
           </div>
         </motion.div>
