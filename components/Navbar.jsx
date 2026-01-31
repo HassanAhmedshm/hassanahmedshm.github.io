@@ -47,10 +47,12 @@ const Navbar = () => {
             </a>
           ))}
           <a
-            href="/hassan_CV.pdf"
+            href="https://drive.google.com/file/d/1I4ZAJ4AnQ0LI9CQF46GJgAuCXZwaZBKf/view?usp=sharing"
+            target="_blank"
+            rel="noopener noreferrer"
             className="px-4 py-2 text-sm font-medium bg-white text-dark rounded hover:bg-gray-200 transition-colors"
           >
-            Download CV
+            View CV
           </a>
         </div>
 
@@ -84,11 +86,13 @@ const Navbar = () => {
                 </a>
               ))}
               <a
-                href="/hassan_CV.pdf"
+                href="https://drive.google.com/file/d/1I4ZAJ4AnQ0LI9CQF46GJgAuCXZwaZBKf/view?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="mt-4 px-4 py-3 text-center font-medium bg-primary text-white rounded hover:bg-primary-dark transition-colors"
                 onClick={() => setIsOpen(false)}
               >
-                Download CV
+                View CV
               </a>
             </div>
           </motion.div>
