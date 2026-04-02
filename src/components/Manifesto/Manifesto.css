@@ -1,0 +1,76 @@
+/* ============================================
+   MANIFESTO SECTION - Scroll-Pinned Word Reveal
+   ============================================ */
+
+.manifesto {
+  position: relative;
+  min-height: 100vh;
+  background: var(--bg-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Subtle radial gradient behind active word */
+.manifesto-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60vw;
+  height: 60vh;
+  background: radial-gradient(ellipse, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Container for all words - centered */
+.manifesto-words {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+/* Each word - absolute positioned, layered on top */
+.manifesto-word {
+  position: absolute;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: clamp(4rem, 12vw, 10rem);
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  opacity: 0;
+  visibility: hidden;
+  will-change: opacity, transform;
+  left: 50%;
+  top: 50%;
+  transform-origin: center center;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Ensure proper layering */
+.manifesto-word[data-word="AI"] {
+  z-index: 5;
+}
+.manifesto-word[data-word="should"] {
+  z-index: 4;
+}
+.manifesto-word[data-word="empower"] {
+  z-index: 3;
+}
+.manifesto-word[data-word="not"] {
+  z-index: 2;
+}
+.manifesto-word[data-word="replace"] {
+  z-index: 1;
+}

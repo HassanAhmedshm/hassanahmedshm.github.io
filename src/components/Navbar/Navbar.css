@@ -1,0 +1,122 @@
+/* ============================================
+   NAVBAR SYSTEM - Simple Top Navigation
+   ============================================ */
+
+.navbar {
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(12px);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 50;
+  padding: 1.5rem 2rem;
+  transition: padding 0.3s;
+  margin: 0;
+  border: none;
+}
+
+.navbar.scrolled {
+  padding: 1rem 2rem;
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.navbar-center {
+  display: flex;
+  gap: 1rem;
+}
+
+.navbar-social {
+  color: var(--text-muted);
+  transition: color 0.2s;
+  display: flex;
+}
+
+.navbar-social:hover { color: var(--text); }
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.navbar-contact {
+  padding: 0.5rem 1rem;
+  background: var(--primary);
+  color: var(--text);
+  border: none;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.navbar-contact:hover { background: var(--primary-dark); }
+
+.navbar-menu {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.navbar-menu:hover { color: var(--text); }
+
+/* ============================================
+   MOBILE OVERLAY
+   ============================================ */
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 10, 0.95);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.mobile-link {
+  font-size: 1.5rem;
+  color: var(--text);
+  padding: 1rem 2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.mobile-link:hover, 
+.mobile-link.active { 
+  color: var(--primary); 
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 767px) {
+  .navbar { padding: 1rem; }
+  .navbar.scrolled { padding: 0.75rem 1rem; }
+}

@@ -1,0 +1,88 @@
+/* ============================================
+   LoadingScreen Styles
+   Full viewport overlay for the loading animation.
+   ============================================ */
+
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-loading);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-dark);
+  pointer-events: all;
+}
+
+/* R3F Canvas fills the overlay */
+.loading-screen__canvas {
+  position: absolute !important;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Skip button — bottom right, subtle mono text */
+.loading-screen__skip {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 10;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.loading-screen__skip:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.loading-screen__skip:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Impact flash effect during explosion */
+@keyframes impact-flash {
+  0% {
+    background-color: var(--bg-dark);
+  }
+  5% {
+    background-color: rgba(59, 130, 246, 0.15);
+  }
+  100% {
+    background-color: var(--bg-dark);
+  }
+}
+
+.loading-screen[data-phase="exploding"] {
+  animation: impact-flash 0.8s ease-out;
+}
+
+/* Reduced motion: disable 3D canvas, simple overlay fade */
+@media (prefers-reduced-motion: reduce) {
+  .loading-screen {
+    transition: opacity 0.8s ease-out;
+  }
+
+  .loading-screen__canvas {
+    display: none !important;
+  }
+  
+  .loading-screen[data-phase="exploding"] {
+    animation: none;
+  }
+}

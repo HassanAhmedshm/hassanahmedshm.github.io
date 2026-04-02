@@ -1,0 +1,129 @@
+/* ============================================
+   ABOUT SECTION - Split Layout with Line Animation
+   ============================================ */
+
+.about {
+  min-height: 100vh;
+  background: var(--bg-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  margin-top: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.about-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 2px 1fr;
+  gap: 0;
+  max-width: 1200px;
+  width: 100%;
+  align-items: center;
+}
+
+/* Center decorative line - starts as a dot, expands vertically */
+.about-line {
+  position: relative;
+  width: 2px;
+  height: 80vh;
+  background: var(--border);
+  transform-origin: center center;
+  align-self: center;
+  justify-self: center;
+  z-index: 2;
+}
+
+/* Image column */
+.about-image-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  padding-left: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.about-image {
+  max-width: 100%;
+  width: 100%;
+  max-height: 500px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Text column */
+.about-content {
+  padding-right: 2rem;
+  text-align: left;
+  position: relative;
+  z-index: 1;
+}
+
+.about-title {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(2rem, 5vw, 3rem);
+  color: var(--text);
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.about-text {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.about-text:last-child {
+  margin-bottom: 0;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE
+   ============================================ */
+@media (max-width: 767px) {
+  .about {
+    padding: 3rem 1.5rem;
+  }
+
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  /* Hide the center line on mobile */
+  .about-line {
+    display: none;
+  }
+
+  .about-image-wrapper {
+    justify-content: center;
+    order: 1;
+    padding-left: 0;
+  }
+
+  .about-image {
+    max-height: 300px;
+    max-width: 80%;
+  }
+
+  .about-content {
+    text-align: center;
+    padding-left: 0;
+    order: 2;
+  }
+
+  .about-title {
+    margin-bottom: 1rem;
+  }
+
+  .about-text {
+    font-size: 1rem;
+  }
+}
