@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ImpactResults } from '../../utils/impactCalculator';
 import { Flame, Mountain, Waves, Activity, Users, Wind } from 'lucide-react';
+import { useSimulation } from '../../contexts/SimulationContext';
 
 const NumberCounter = ({ value, duration = 1000, formatter = (n: number) => n.toString() }: { value: number, duration?: number, formatter?: (n: number) => string }) => {
   const [count, setCount] = useState(0);
@@ -26,11 +26,12 @@ const NumberCounter = ({ value, duration = 1000, formatter = (n: number) => n.to
   return <span>{formatter(count)}</span>;
 };
 
-interface ImpactResultsProps {
-  results: ImpactResults;
-}
+export default function ImpactResultsDashboard() {
+  const { results } = useSimulation();
 
-export default function ImpactResultsDashboard({ results }: ImpactResultsProps) {
+  if (!results) {
+    return null;
+  }
   const formatNumber = (num: number): string => {
     if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
     if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;

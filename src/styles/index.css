@@ -153,6 +153,45 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* GPU Acceleration Utilities */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Hero letters */
+.hero-letter {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* About section elements */
+.about-content,
+.about-image-wrapper {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* Project panels */
+.project-panel {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* Reset will-change after animation completes */
+.hero-letter.animated {
+  will-change: auto;
+}
+
+.about-content.animated,
+.about-image-wrapper.animated {
+  will-change: auto;
+}
+
+.project-panel.animated {
+  will-change: auto;
+}
+
 /* Tailwind CSS */
 @tailwind base;
 @tailwind components;

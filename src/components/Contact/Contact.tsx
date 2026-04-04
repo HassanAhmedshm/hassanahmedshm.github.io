@@ -25,7 +25,7 @@ const Contact = () => {
 
   return (
     <section className="contact" id="contact">
-      <StarField density={60} speed={0.8} />
+      <StarField density={60} speed={0.8} deferred />
       <div className="contact-wrapper">
         <div className="contact-content">
           <h2 className="contact-title">Contact Me</h2>

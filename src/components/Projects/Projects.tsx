@@ -3,6 +3,8 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import ProjectPanel from './ProjectPanel';
 import CustomCursor from './CustomCursor';
+import { useDeviceCapabilities } from '../../hooks/useDeviceCapabilities';
+import { useScrollTriggerCleanup } from '../../hooks/useScrollTriggerCleanup';
 import './Projects.css';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -45,25 +47,28 @@ const Projects = () => {
   const gridRef = useRef<HTMLDivElement>(null);
   const [hoveredProject, setHoveredProject] = useState<any>(null);
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.matchMedia('(max-width: 768px)').matches);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const { isMobile } = useDeviceCapabilities();
+  const { registerInstance } = useScrollTriggerCleanup();
 
   useEffect(() => {
     if (!gridRef.current || isMobile) return;
 
     const panels = gridRef.current.querySelectorAll('.project-panel');
     
+    // Kill any existing ScrollTriggers for these panels (React Strict Mode safety)
+    ScrollTrigger.getAll().forEach(st => {
+      panels.forEach(panel => {
+        if (st.vars.trigger === panel) {
+          st.kill();
+        }
+      });
+    });
+    
     panels.forEach((panel, index) => {
       const isLeftColumn = index % 2 === 0;
       const startX = isLeftColumn ? -150 : 150;
       
-      gsap.fromTo(panel, 
+      const tween = gsap.fromTo(panel, 
         { x: startX, y: 100, opacity: 0 },
         {
           x: 0,
@@ -78,18 +83,12 @@ const Projects = () => {
           },
         }
       );
+      
+      // Register the ScrollTrigger instance for cleanup
+      if (tween.scrollTrigger) {
+        registerInstance(tween.scrollTrigger);
+      }
     });
-
-    return () => {
-      ScrollTrigger.getAll().forEach(trigger => {
-        const triggerElement = trigger.vars.trigger;
-        if (triggerElement && typeof triggerElement !== 'string' && 'closest' in triggerElement) {
-          if ((triggerElement as Element).closest('.project-panel')) {
-            trigger.kill();
-          }
-        }
-      });
-    };
   }, [isMobile]);
 
   const handleMouseEnter = (project: any) => {

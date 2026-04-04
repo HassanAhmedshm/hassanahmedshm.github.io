@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Target, Shield, BarChart3, Map, Home } from 'lucide-react';
 import SolarSystemViewer from '../components/AstroV/SolarSystemViewer';
 import ControlPanel from '../components/AstroV/ControlPanel';
@@ -7,72 +7,35 @@ import WorldMap from '../components/AstroV/WorldMap';
 import MitigationSimulator from '../components/AstroV/MitigationSimulator';
 import EducationalMode from '../components/AstroV/EducationalMode';
 import DataVisualization from '../components/AstroV/DataVisualization';
-import { AsteroidParams, calculateImpact, ImpactResults } from '../utils/impactCalculator';
+import { SimulationProvider, useSimulation } from '../contexts/SimulationContext';
 
 type Tab = 'home' | 'impact' | 'map' | 'mitigation' | 'data';
-type SimulationPhase = 'idle' | 'approaching' | 'impact' | 'analyzing' | 'finished';
 
-function App() {
-  const [params, setParams] = useState<AsteroidParams>({
-    diameter: 100,
-    velocity: 30,
-    angle: 45,
-    density: 'rocky',
-    locationType: 'land',
-  });
+function AstroVContent() {
+  const {
+    params,
+    results,
+    simulationPhase,
+    impactLocation,
+    setParams,
+    setSimulationPhase,
+    handleSimulate,
+    handleLocationSelect,
+  } = useSimulation();
 
-  const [results, setResults] = useState<ImpactResults | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('home');
-  const [impactLocation, setImpactLocation] = useState({ lat: 40.7128, lng: -74.006 });
   const [educationalMode, setEducationalMode] = useState(false);
-  const [simulationPhase, setSimulationPhase] = useState<SimulationPhase>('idle');
   const [isShaking, setIsShaking] = useState(false);
 
-  useEffect(() => {
-    const locationData = getCityPopulation(impactLocation.lat, impactLocation.lng);
-    const calculatedResults = calculateImpact(params, locationData.population);
-    setResults(calculatedResults);
-  }, [params, impactLocation]);
-
-  const handleSimulate = () => {
-    setSimulationPhase('approaching');
-    // Sequence: Approaching (3s) -> Impact (Shock 1s) -> Results
+  const handleSimulateWithShake = () => {
+    handleSimulate();
     setTimeout(() => {
-      setSimulationPhase('impact');
       setIsShaking(true);
       setTimeout(() => {
         setIsShaking(false);
-        setSimulationPhase('analyzing');
-        setTimeout(() => setSimulationPhase('finished'), 1000);
       }, 1000);
     }, 3000);
   };
-
-  const handleLocationSelect = (lat: number, lng: number) => {
-    setImpactLocation({ lat, lng });
-  };
-
-  function getCityPopulation(lat: number, lng: number): { population: number; city: string } {
-    const cities = [
-      { name: 'New York', lat: 40.7128, lng: -74.006, population: 8000000 },
-      { name: 'London', lat: 51.5074, lng: -0.1278, population: 9000000 },
-      { name: 'Tokyo', lat: 35.6762, lng: 139.6503, population: 14000000 },
-      { name: 'Los Angeles', lat: 34.0522, lng: -118.2437, population: 4000000 },
-      { name: 'Paris', lat: 48.8566, lng: 2.3522, population: 2200000 },
-      { name: 'Mumbai', lat: 19.076, lng: 72.8777, population: 20000000 },
-    ];
-
-    for (const city of cities) {
-      const distance = Math.sqrt(
-        Math.pow(lat - city.lat, 2) + Math.pow(lng - city.lng, 2)
-      );
-      if (distance < 1) {
-        return { population: city.population, city: city.name };
-      }
-    }
-
-    return { population: 0, city: 'Ocean/Rural Area' };
-  }
 
   const tabs = [
     { id: 'home' as const, label: 'Home', icon: Home },
@@ -110,7 +73,7 @@ function App() {
                 GitHub
               </a>
               <a 
-                href="" 
+                href="/" 
                 className="bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -332,7 +295,7 @@ function App() {
                 {simulationPhase === 'idle' && (
                   <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-10">
                     <button 
-                      onClick={handleSimulate}
+                      onClick={handleSimulateWithShake}
                       className="bg-red-600 hover:bg-red-700 text-white px-12 py-6 rounded-full text-2xl font-black uppercase tracking-widest shadow-[0_0_50px_rgba(220,38,38,0.5)] transition-all transform hover:scale-110 active:scale-95 flex items-center gap-4"
                     >
                       <Target size={32} />
@@ -482,6 +445,14 @@ function App() {
         onToggle={() => setEducationalMode(!educationalMode)}
       />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <SimulationProvider>
+      <AstroVContent />
+    </SimulationProvider>
   );
 }
 

@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -11,89 +10,13 @@ import Manifesto from './components/Manifesto/Manifesto';
 import About from './components/About/About';
 import Projects from './components/Projects/Projects';
 import Contact from './components/Contact/Contact';
-import AstroV from './pages/AstroV';
+import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
 import './styles/index.css';
 
+// Lazy load AstroV page for code splitting (Requirements 8.1, 8.2)
+const AstroV = lazy(() => import('./pages/AstroV'));
+
 gsap.registerPlugin(ScrollTrigger);
-
-/**
- * FloatingParticles - Subtle background particle mesh
- */
-const FloatingParticles = ({ count = 500 }) => {
-  const meshRef = useRef<any>(null);
-  
-  const particles = useMemo(() => {
-    const positions = new Float32Array(count * 3);
-    const velocities = new Float32Array(count * 3);
-    
-    for (let i = 0; i < count; i++) {
-      const i3 = i * 3;
-      positions[i3] = (Math.random() - 0.5) * 20;
-      positions[i3 + 1] = (Math.random() - 0.5) * 20;
-      positions[i3 + 2] = (Math.random() - 0.5) * 10;
-      
-      velocities[i3] = (Math.random() - 0.5) * 0.002;
-      velocities[i3 + 1] = (Math.random() - 0.5) * 0.002;
-      velocities[i3 + 2] = (Math.random() - 0.5) * 0.001;
-    }
-    
-    return { positions, velocities };
-  }, [count]);
-  
-  useFrame(() => {
-    if (!meshRef.current) return;
-    
-    const positions = meshRef.current.geometry.attributes.position.array;
-    for (let i = 0; i < count; i++) {
-      const i3 = i * 3;
-      positions[i3] += particles.velocities[i3];
-      positions[i3 + 1] += particles.velocities[i3 + 1];
-      positions[i3 + 2] += particles.velocities[i3 + 2];
-      
-      // Wrap around bounds
-      if (Math.abs(positions[i3]) > 10) positions[i3] *= -0.9;
-      if (Math.abs(positions[i3 + 1]) > 10) positions[i3 + 1] *= -0.9;
-      if (Math.abs(positions[i3 + 2]) > 5) positions[i3 + 2] *= -0.9;
-    }
-    meshRef.current.geometry.attributes.position.needsUpdate = true;
-  });
-  
-  return (
-    <points ref={meshRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={count}
-          array={particles.positions}
-          itemSize={3}
-          args={[particles.positions, 3]}
-        />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.02}
-        color="#3b82f6"
-        transparent
-        opacity={0.4}
-        sizeAttenuation
-      />
-    </points>
-  );
-};
-
-/**
- * Scene - Three.js canvas for WebGL background
- */
-const Scene = () => {
-  return (
-    <Canvas
-      id="webgl-canvas"
-      camera={{ position: [0, 0, 5], fov: 75 }}
-      gl={{ antialias: true, alpha: true }}
-    >
-      <color attach="background" args={['#0a0a0a']} />
-    </Canvas>
-  );
-};
 
 /**
  * App - Main application shell with Lenis smooth scroll
@@ -196,9 +119,6 @@ function Portfolio() {
 
   return (
     <>
-      {/* Three.js WebGL Canvas (background) */}
-      <Scene />
-      
       {/* Loading Screen - only show if not reduced motion */}
       {!reducedMotion && (
         <LoadingScreen onComplete={handleLoadingComplete} />
@@ -231,7 +151,14 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Portfolio />} />
-        <Route path="/astrov" element={<AstroV />} />
+        <Route
+          path="/astrov"
+          element={
+            <Suspense fallback={<LoadingSpinner size="lg" />}>
+              <AstroV />
+            </Suspense>
+          }
+        />
       </Routes>
     </Router>
   );

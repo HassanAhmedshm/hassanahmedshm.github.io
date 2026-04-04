@@ -2,8 +2,10 @@ import { useState } from 'react';
 
 /**
  * ProjectPanel - Individual project panel with hover effects
+ * Validates: Requirements 9.3, 9.4
  */
 const ProjectPanel = ({ project, columnIndex, onMouseEnter, onMouseMove, onMouseLeave, isMobile }) => {
+  const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
 
   const handleMouseEnter = (e) => {
@@ -48,18 +50,28 @@ const ProjectPanel = ({ project, columnIndex, onMouseEnter, onMouseMove, onMouse
       style={{ cursor: project.link.startsWith('#') ? 'default' : 'pointer' }}
     >
       <div className="project-image-wrapper">
-        {!imageError ? (
-          <img 
-            src={project.image} 
-            alt={project.title}
-            className="project-image"
-            onError={() => setImageError(true)}
-            loading="lazy"
-          />
-        ) : (
+        {imageError ? (
           <div className="project-image-fallback">
             <span>{project.title.charAt(0)}</span>
           </div>
+        ) : (
+          <>
+            {imageLoading && (
+              <div className="project-image-placeholder" />
+            )}
+            <img 
+              src={project.image} 
+              alt={project.title}
+              className="project-image"
+              onLoad={() => setImageLoading(false)}
+              onError={() => {
+                setImageLoading(false);
+                setImageError(true);
+              }}
+              loading="lazy"
+              style={{ opacity: imageLoading ? 0 : 1 }}
+            />
+          </>
         )}
       </div>
       <div className="project-overlay">

@@ -2,12 +2,11 @@ import { useState } from 'react';
 import { Shield, Zap, Radio, TrendingUp } from 'lucide-react';
 import { calculateMitigation } from '../../utils/impactCalculator';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useSimulation } from '../../contexts/SimulationContext';
 
-interface MitigationSimulatorProps {
-  tntEquivalent: number;
-}
-
-export default function MitigationSimulator({ tntEquivalent }: MitigationSimulatorProps) {
+export default function MitigationSimulator() {
+  const { results } = useSimulation();
+  const tntEquivalent = results?.tntEquivalent ?? 0;
   const [strategy, setStrategy] = useState<'kinetic' | 'nuclear' | 'gravity'>('kinetic');
   const [daysBeforeImpact, setDaysBeforeImpact] = useState(1825);
   const [missionStatus, setMissionStatus] = useState<'ready' | 'launching' | 'successful' | 'failed'>('ready');

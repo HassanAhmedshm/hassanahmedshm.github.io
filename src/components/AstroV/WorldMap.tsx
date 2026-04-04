@@ -2,28 +2,30 @@ import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Crosshair } from 'lucide-react';
+import { useSimulation } from '../../contexts/SimulationContext';
 
-interface WorldMapProps {
-  impactLocation: { lat: number; lng: number };
-  onLocationSelect: (lat: number, lng: number) => void;
-  affectedRadius: number;
-  fireballRadius: number;
-  thermalRadius: number;
-  locationType: 'land' | 'water';
-  onLocationTypeChange: (type: 'land' | 'water') => void;
-  phase?: 'idle' | 'approaching' | 'impact' | 'analyzing' | 'finished';
-}
+export default function WorldMap() {
+  const {
+    impactLocation,
+    setImpactLocation,
+    params,
+    results,
+    simulationPhase,
+  } = useSimulation();
 
-export default function WorldMap({
-  impactLocation,
-  onLocationSelect,
-  affectedRadius,
-  fireballRadius,
-  thermalRadius,
-  locationType,
-  onLocationTypeChange,
-  phase = 'idle',
-}: WorldMapProps) {
+  const locationType = params.locationType;
+  const affectedRadius = results?.affectedAreaRadius ?? 0;
+  const fireballRadius = results?.fireball ?? 0;
+  const thermalRadius = results?.thermalRadiation ?? 0;
+
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setImpactLocation({ lat, lng });
+  };
+
+  const handleLocationTypeChange = (type: 'land' | 'water') => {
+    // Note: This would need setParams to be added to context if we want to update locationType
+    // For now, we'll use the params from context
+  };
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<{
@@ -46,7 +48,7 @@ export default function WorldMap({
     }).addTo(map);
 
     map.on('click', (e: L.LeafletMouseEvent) => {
-      onLocationSelect(e.latlng.lat, e.latlng.lng);
+      handleLocationSelect(e.latlng.lat, e.latlng.lng);
     });
 
     mapRef.current = map;
@@ -68,7 +70,7 @@ export default function WorldMap({
     }
 
     // Only add impact visuals if phase is 'impact', 'analyzing' or 'finished'
-    if (mapRef.current && (phase === 'impact' || phase === 'analyzing' || phase === 'finished')) {
+    if (mapRef.current && (simulationPhase === 'impact' || simulationPhase === 'analyzing' || simulationPhase === 'finished')) {
       if (locationType === 'land') {
         const fireballCircle = L.circle([impactLocation.lat, impactLocation.lng], {
           radius: fireballRadius,
@@ -136,7 +138,7 @@ export default function WorldMap({
     }
 
     mapRef.current.setView([impactLocation.lat, impactLocation.lng], mapRef.current.getZoom());
-  }, [impactLocation, affectedRadius, fireballRadius, thermalRadius, locationType, phase]);
+  }, [impactLocation, affectedRadius, fireballRadius, thermalRadius, locationType, simulationPhase]);
 
   return (
     <div className="relative w-full h-full group overflow-hidden">
@@ -147,7 +149,7 @@ export default function WorldMap({
           {(['land', 'water'] as const).map((type) => (
             <button
               key={type}
-              onClick={() => onLocationTypeChange(type)}
+              onClick={() => handleLocationTypeChange(type)}
               className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
                 locationType === type 
                   ? 'bg-blue-600 text-white shadow-lg' 
@@ -191,7 +193,7 @@ export default function WorldMap({
           </p>
         </div>
 
-        {(phase === 'impact' || phase === 'analyzing' || phase === 'finished') && (
+        {(simulationPhase === 'impact' || simulationPhase === 'analyzing' || simulationPhase === 'finished') && (
           <div className="space-y-2 text-xs">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-red-500" />

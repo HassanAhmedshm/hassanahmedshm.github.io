@@ -51,8 +51,25 @@
   height: 100%;
   object-fit: cover;
   filter: grayscale(30%);
-  transition: filter 0.4s ease, transform 0.4s ease;
+  transition: filter 0.4s ease, transform 0.4s ease, opacity 0.3s ease;
   transform: scale(1);
+}
+
+.project-image-placeholder {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--surface) 25%, var(--border) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .project-panel:hover .project-image {

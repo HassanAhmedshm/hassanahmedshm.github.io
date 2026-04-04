@@ -2,6 +2,25 @@ import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { seededRandomRange } from '../utils/math';
+import { useScrollTriggerCleanup } from './useScrollTriggerCleanup';
+
+interface RandomValues {
+  x: number;
+  y: number;
+  rotation: number;
+  scale: number;
+}
+
+interface UseLetterExplosionOptions {
+  containerRef?: React.RefObject<HTMLElement>;
+  triggerSelector?: string;
+  charSelector?: string;
+  xRange?: number;
+  yRange?: number;
+  maxRotation?: number;
+  minScale?: number;
+  maxScale?: number;
+}
 
 /**
  * Custom hook for scroll-driven letter explosion animation
@@ -15,8 +34,9 @@ export const useLetterExplosion = ({
   maxRotation = 180,
   minScale = 0.5,
   maxScale = 1.5
-} = {}) => {
-  const randomValuesRef = useRef(null);
+}: UseLetterExplosionOptions = {}) => {
+  const randomValuesRef = useRef<RandomValues[] | null>(null);
+  const { registerInstance } = useScrollTriggerCleanup();
 
   useEffect(() => {
     if (!containerRef?.current) return;
@@ -46,7 +66,7 @@ export const useLetterExplosion = ({
     });
 
     // Create scroll-triggered animation
-    const timeline = gsap.to(charElements, {
+    gsap.to(charElements, {
       scrollTrigger: {
         trigger: triggerSelector,
         start: 'top top',
@@ -55,27 +75,29 @@ export const useLetterExplosion = ({
         onUpdate: (self) => {
           const progress = self.progress;
           charElements.forEach((el, index) => {
-            const rand = randomValuesRef.current[index];
-            gsap.set(el, {
-              x: rand.x * progress,
-              y: rand.y * progress,
-              rotation: rand.rotation * progress,
-              scale: 1 - (1 - rand.scale) * progress,
-              opacity: 1 - progress * 0.9
-            });
+            const rand = randomValuesRef.current?.[index];
+            if (rand) {
+              gsap.set(el as Element, {
+                x: rand.x * progress,
+                y: rand.y * progress,
+                rotation: rand.rotation * progress,
+                scale: 1 - (1 - rand.scale) * progress,
+                opacity: 1 - progress * 0.9
+              });
+            }
           });
         }
       }
     });
 
-    return () => {
-      timeline.kill();
-      ScrollTrigger.getAll().forEach(st => {
-        if (st.vars.trigger === triggerSelector) {
-          st.kill();
-        }
-      });
-    };
+    // Register the ScrollTrigger instance for cleanup
+    const scrollTrigger = ScrollTrigger.getAll().find(
+      st => st.vars.trigger === triggerSelector
+    );
+    if (scrollTrigger) {
+      registerInstance(scrollTrigger);
+    }
+    // Cleanup handled by useScrollTriggerCleanup hook
   }, [containerRef, triggerSelector, charSelector, xRange, yRange, maxRotation, minScale, maxScale]);
 };
 
