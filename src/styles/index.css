@@ -4,6 +4,7 @@
 :root {
   /* Colors */
   --bg-dark: #0a0a0a;
+  --bg-sidebar: #050505;
   --surface: #121212;
   --border: #27272a;
   --primary: #3b82f6;
@@ -61,6 +62,68 @@ body {
   padding: 0;
 }
 
+/* Push effect - lock scroll when sidebar is open */
+body.sidebar-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  background: linear-gradient(135deg, #0c1222 0%, #0a0a0f 50%, #0d1018 100%);
+}
+
+html.sidebar-open,
+html.sidebar-open body {
+  overflow: hidden;
+  height: 100%;
+  position: fixed;
+  width: 100%;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+/* Push wrapper - contains all content that should be pushed/scaled */
+.push-wrapper {
+  position: relative;
+  min-height: 100vh;
+  background: var(--bg-dark);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              border-radius 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top center;
+}
+
+body.sidebar-open .push-wrapper {
+  /* Fixed position to show at consistent location regardless of scroll */
+  position: fixed;
+  /* Position below the arcade area (arcade takes ~220px height at top) */
+  top: 240px;
+  left: 2rem;
+  /* Match arcade's width constraint */
+  right: calc(var(--sidebar-width) + 4rem);
+  width: auto;
+  /* Fill remaining height with some padding */
+  bottom: 2rem;
+  height: auto;
+  /* No transform scaling - use actual box sizing */
+  transform: none;
+  /* Visual styling */
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  /* Enable internal scrolling to show current position */
+  overflow-y: auto;
+  overflow-x: hidden;
+  pointer-events: none;
+  z-index: 55;
+}
+
+/* Hide minimized preview on mobile - just show sidebar */
+@media (max-width: 767px) {
+  body.sidebar-open .push-wrapper {
+    display: none;
+  }
+}
+
 main {
   margin: 0;
   padding: 0;
@@ -115,9 +178,10 @@ main {
   color: var(--text);
 }
 
-/* Section base */
+/* Section base - use dvh for mobile viewport handling */
 .main-content section {
   min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
   padding: 0;
   margin: 0;
@@ -190,6 +254,15 @@ h1, h2, h3, h4, h5, h6 {
 
 .project-panel.animated {
   will-change: auto;
+}
+
+/* Scrollbar hide utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 /* Tailwind CSS */

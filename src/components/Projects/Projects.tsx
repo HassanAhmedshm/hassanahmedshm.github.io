@@ -15,7 +15,7 @@ const projects = [
     title: 'AstroV',
     brief: 'Near-Earth asteroid tracking and impact simulation platform.',
     image: '/images/astrov_longg.png',
-    link: '/astrov',
+    link: '/#/astrov',
   },
   {
     id: 2,
@@ -49,6 +49,13 @@ const Projects = () => {
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
   const { isMobile } = useDeviceCapabilities();
   const { registerInstance } = useScrollTriggerCleanup();
+
+  // Cleanup cursor style when component unmounts
+  useEffect(() => {
+    return () => {
+      document.body.style.cursor = 'auto';
+    };
+  }, []);
 
   useEffect(() => {
     if (!gridRef.current || isMobile) return;

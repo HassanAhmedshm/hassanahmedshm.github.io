@@ -119,29 +119,35 @@ function Portfolio() {
 
   return (
     <>
-      {/* Loading Screen - only show if not reduced motion */}
-      {!reducedMotion && (
-        <LoadingScreen onComplete={handleLoadingComplete} />
-      )}
+      {/* Sidebar - must be outside the push wrapper */}
+      {contentVisible && <Navbar contentRef={contentRef} sidebarOnly />}
       
-      {/* Navigation - outside scroll wrapper for proper fixed positioning */}
-      {contentVisible && <Navbar contentRef={contentRef} />}
-      
-      {/* Main content with opacity transition */}
-      <main 
-        ref={contentRef}
-        className="main-content"
-        style={{
-          opacity: contentVisible ? 1 : 0,
-          transition: reducedMotion ? 'none' : 'opacity 0.6s ease'
-        }}
-      >
-        <Hero />
-        <Manifesto />
-        <About />
-        <Projects />
-        <Contact />
-      </main>
+      {/* Push wrapper - this entire container gets scaled/pushed */}
+      <div className="push-wrapper">
+        {/* Loading Screen - only show if not reduced motion */}
+        {!reducedMotion && (
+          <LoadingScreen onComplete={handleLoadingComplete} />
+        )}
+        
+        {/* Navigation - inside push wrapper so it transforms with content */}
+        {contentVisible && <Navbar contentRef={contentRef} />}
+        
+        {/* Main content with opacity transition */}
+        <main 
+          ref={contentRef}
+          className="main-content"
+          style={{
+            opacity: contentVisible ? 1 : 0,
+            transition: reducedMotion ? 'none' : 'opacity 0.6s ease'
+          }}
+        >
+          <Hero />
+          <Manifesto />
+          <About />
+          <Projects />
+          <Contact />
+        </main>
+      </div>
     </>
   );
 }

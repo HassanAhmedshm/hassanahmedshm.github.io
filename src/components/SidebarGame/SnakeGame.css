@@ -1,0 +1,88 @@
+.snake-game {
+  position: relative;
+  width: calc(25% - 0.75rem);
+  min-width: 200px;
+  aspect-ratio: 260 / 180;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  outline: none;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.1);
+  transition: border-color 0.3s, box-shadow 0.3s;
+  flex-shrink: 0;
+}
+
+.snake-game:hover,
+.snake-game:focus {
+  border-color: rgba(34, 197, 94, 0.5);
+  box-shadow: 0 0 30px rgba(34, 197, 94, 0.2);
+}
+
+.snake-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.snake-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(12, 18, 34, 0.85);
+  gap: 0.35rem;
+}
+
+.snake-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #22c55e;
+  text-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+}
+
+.snake-score {
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.snake-hint {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  animation: pulse-hint 2s ease-in-out infinite;
+  text-align: center;
+}
+
+@keyframes pulse-hint {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.snake-score-display {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.snake-highscore {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 767px) {
+  .snake-game {
+    width: 100%;
+    max-width: 300px;
+  }
+}

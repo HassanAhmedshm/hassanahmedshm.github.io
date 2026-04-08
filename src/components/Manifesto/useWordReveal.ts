@@ -32,6 +32,7 @@ export const useWordReveal = ({ sectionRef, words, scrollDistance = 3000 } = {})
     });
 
     // Create timeline with scrollTrigger
+    // Pin starts when section top hits viewport top - content is already centered via CSS
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: section,
@@ -39,7 +40,8 @@ export const useWordReveal = ({ sectionRef, words, scrollDistance = 3000 } = {})
         scrub: 0.5,
         start: 'top top',
         end: `+=${scrollDistance}`,
-        anticipatePin: 1
+        anticipatePin: 1,
+        pinSpacing: true,
       }
     });
 
