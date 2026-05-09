@@ -4,10 +4,14 @@
     <meta charset="utf-8">
     <title>Redirecting...</title>
     <script>
-      // GitHub Pages SPA redirect hack
-      // Store the path and redirect to index.html
-      sessionStorage.setItem('redirect', location.pathname + location.search + location.hash);
-      location.replace(location.origin + location.pathname.split('/').slice(0, -1).join('/') + '/');
+      // Redirect only client-side routes, not static assets.
+      var path = location.pathname;
+      var looksLikeAsset = /\.[^/]+$/.test(path);
+
+      if (!looksLikeAsset) {
+        sessionStorage.setItem('redirect', path + location.search + location.hash);
+        location.replace(location.origin + path.split('/').slice(0, -1).join('/') + '/');
+      }
     </script>
   </head>
   <body>
