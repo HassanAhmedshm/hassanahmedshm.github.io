@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useScrollTriggerCleanup } from '../../hooks/useScrollTriggerCleanup';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -14,7 +13,6 @@ gsap.registerPlugin(ScrollTrigger);
  */
 export const useWordReveal = ({ sectionRef, words, scrollDistance = 3000 } = {}) => {
   const timelineRef = useRef(null);
-  const { registerInstance } = useScrollTriggerCleanup();
 
   useEffect(() => {
     const section = sectionRef?.current;
@@ -24,15 +22,7 @@ export const useWordReveal = ({ sectionRef, words, scrollDistance = 3000 } = {})
 
     if (wordElements.length === 0) return;
 
-    // Kill any existing ScrollTrigger for this section (React Strict Mode safety)
-    ScrollTrigger.getAll().forEach(st => {
-      if (st.vars.trigger === section) {
-        st.kill();
-      }
-    });
-
     // Create timeline with scrollTrigger
-    // Pin starts when section top hits viewport top - content is already centered via CSS
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: section,
@@ -40,15 +30,9 @@ export const useWordReveal = ({ sectionRef, words, scrollDistance = 3000 } = {})
         scrub: 0.5,
         start: 'top top',
         end: `+=${scrollDistance}`,
-        anticipatePin: 1,
-        pinSpacing: true,
+        anticipatePin: 1
       }
     });
-
-    // Register the ScrollTrigger instance for cleanup
-    if (tl.scrollTrigger) {
-      registerInstance(tl.scrollTrigger);
-    }
 
     // Calculate timing for each word
     // Total progress = 1, divide among words with fade in/out for each
@@ -95,7 +79,16 @@ export const useWordReveal = ({ sectionRef, words, scrollDistance = 3000 } = {})
     });
 
     timelineRef.current = tl;
-  }, []);
+
+    return () => {
+      tl.kill();
+      ScrollTrigger.getAll().forEach(st => {
+        if (st.vars.trigger === section) {
+          st.kill();
+        }
+      });
+    };
+  }, [sectionRef, words, scrollDistance]);
 
   return timelineRef;
 };

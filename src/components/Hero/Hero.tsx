@@ -28,7 +28,7 @@ const Hero = () => {
 
   return (
     <section className="hero" id="hero">
-      <StarField density={80} speed={1} deferred />
+      <StarField density={80} speed={1} />
       <div className="hero-content">
         <h1 className="hero-title" ref={nameRef}>
           {letters.map(({ char, index, isSpace }) => (

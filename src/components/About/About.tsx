@@ -1,23 +1,18 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useScrollTriggerCleanup } from '../../hooks/useScrollTriggerCleanup';
 import './About.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
 /**
  * About - Split layout section with line animation
- * Validates: Requirements 9.3, 9.4
  */
 const About = () => {
   const sectionRef = useRef(null);
   const lineRef = useRef(null);
   const imageRef = useRef(null);
   const textRef = useRef(null);
-  const { registerInstance } = useScrollTriggerCleanup();
-  const [imageLoading, setImageLoading] = useState(true);
-  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -27,19 +22,12 @@ const About = () => {
 
     if (!section || !line || !image || !text) return;
 
-    // Kill any existing ScrollTrigger for this section (React Strict Mode safety)
-    ScrollTrigger.getAll().forEach(st => {
-      if (st.vars.trigger === section) {
-        st.kill();
-      }
-    });
-
     // Set initial states - hide everything
     gsap.set(line, { scaleY: 0, transformOrigin: 'center center' });
     gsap.set(image, { x: -100, opacity: 0 }); // starts at line, moves right
     gsap.set(text, { x: 100, opacity: 0 }); // starts at line, moves left
 
-    // Create timeline with pin
+    // Create timeline
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: section,
@@ -47,15 +35,9 @@ const About = () => {
         end: '+=800',
         pin: true,
         scrub: 1,
-        anticipatePin: 1,
-        pinSpacing: true,
+        anticipatePin: 1
       }
     });
-
-    // Register the ScrollTrigger instance for cleanup
-    if (tl.scrollTrigger) {
-      registerInstance(tl.scrollTrigger);
-    }
 
     // 1. Line expands from center dot upward and downward
     tl.to(line, {
@@ -75,7 +57,15 @@ const About = () => {
       opacity: 1,
       ease: 'power2.out'
     }, '<');
-    // Cleanup handled by useScrollTriggerCleanup hook
+
+    return () => {
+      tl.kill();
+      ScrollTrigger.getAll().forEach(st => {
+        if (st.vars.trigger === section) {
+          st.kill();
+        }
+      });
+    };
   }, []);
 
   return (
@@ -100,28 +90,11 @@ const About = () => {
 
         {/* Right column - Image */}
         <div className="about-image-wrapper" ref={imageRef}>
-          {imageError ? (
-            <div className="about-image-error">
-              <span>!</span>
-            </div>
-          ) : (
-            <>
-              {imageLoading && (
-                <div className="about-image-placeholder" />
-              )}
-              <img 
-                src="/images/school.jpg" 
-                alt="Hassan Ahmed" 
-                className="about-image"
-                onLoad={() => setImageLoading(false)}
-                onError={() => {
-                  setImageLoading(false);
-                  setImageError(true);
-                }}
-                style={{ opacity: imageLoading ? 0 : 1 }}
-              />
-            </>
-          )}
+          <img 
+            src="/images/school.jpg" 
+            alt="Hassan Ahmed" 
+            className="about-image"
+          />
         </div>
       </div>
     </section>

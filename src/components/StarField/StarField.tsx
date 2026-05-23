@@ -1,30 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
-import { scheduleDeferredAnimation } from '../../utils/animation';
+import { useEffect, useRef } from 'react';
 import './StarField.css';
 
 /**
  * StarField - Optimized animated background stars
- * Supports deferred initialization for better main thread responsiveness
- * 
- * Validates: Requirements 11.1, 11.4
  */
-const StarField = ({ density = 100, speed = 1, deferred = false }) => {
+const StarField = ({ density = 100, speed = 1 }) => {
   const canvasRef = useRef(null);
   const starsRef = useRef([]);
   const animationRef = useRef(null);
-  const [isInitialized, setIsInitialized] = useState(!deferred);
 
   useEffect(() => {
-    // If deferred, wait for idle callback before initializing
-    // Validating: Requirements 11.1, 11.4
-    if (deferred && !isInitialized) {
-      scheduleDeferredAnimation(() => {
-        setIsInitialized(true);
-      });
-      return;
-    }
-
-    if (!isInitialized) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -110,12 +95,7 @@ const StarField = ({ density = 100, speed = 1, deferred = false }) => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [density, speed, isInitialized, deferred]);
-
-  // Don't render canvas until initialized (for deferred mode)
-  if (deferred && !isInitialized) {
-    return <div className="star-field" style={{ opacity: 0 }} />;
-  }
+  }, [density, speed]);
 
   return <canvas ref={canvasRef} className="star-field" />;
 };
