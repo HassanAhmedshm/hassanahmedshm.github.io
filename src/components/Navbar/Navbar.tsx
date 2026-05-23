@@ -1,10 +1,29 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { IsometricH } from '../Logo/StylizedH';
 import './Navbar.css';
 
+// Lazy load the games
+const FlappyGame = lazy(() => import('../SidebarGame/FlappyGame'));
+const SnakeGame = lazy(() => import('../SidebarGame/SnakeGame'));
+const ReactionGame = lazy(() => import('../SidebarGame/ReactionGame'));
+
 gsap.registerPlugin(ScrollTrigger);
+
+// Dev quotes for terminal
+const devQuotes = [
+  "Code is poetry written in logic.",
+  "First, solve the problem. Then, write the code.",
+  "Simplicity is the soul of efficiency.",
+  "Make it work, make it right, make it fast.",
+  "The best error message is the one that never shows up.",
+  "Clean code always looks like it was written by someone who cares.",
+  "Programs must be written for people to read.",
+  "Talk is cheap. Show me the code.",
+  "Any fool can write code that a computer can understand.",
+  "Debugging is twice as hard as writing the code.",
+];
 
 // Inline SVG icons
 const GitHubIcon = () => (
@@ -19,6 +38,13 @@ const LinkedInIcon = () => (
   </svg>
 );
 
+const CloseIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"></line>
+    <line x1="6" y1="6" x2="18" y2="18"></line>
+  </svg>
+);
+
 const sections = [
   { id: 'hero', label: 'Home' },
   { id: 'manifesto', label: 'Manifesto' },
@@ -28,13 +54,95 @@ const sections = [
 ];
 
 /**
- * Navbar - Simple top navigation
+ * Navbar - Simple top navigation with push sidebar
+ * When sidebarOnly=true, only renders the sidebar (for placement outside push wrapper)
  */
-const Navbar = ({ contentRef }) => {
+const Navbar = ({ contentRef, sidebarOnly = false }) => {
   const navbarRef = useRef(null);
+  const sidebarRef = useRef(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('hero');
+  const [currentQuote, setCurrentQuote] = useState(devQuotes[0]);
+  const [displayedText, setDisplayedText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [showArcadeHint, setShowArcadeHint] = useState(false);
+
+  // Typing effect for quotes
+  useEffect(() => {
+    if (!menuOpen) return;
+    
+    let charIndex = 0;
+    setDisplayedText('');
+    setIsTyping(true);
+    
+    const typeInterval = setInterval(() => {
+      if (charIndex < currentQuote.length) {
+        setDisplayedText(currentQuote.slice(0, charIndex + 1));
+        charIndex++;
+      } else {
+        clearInterval(typeInterval);
+        setIsTyping(false);
+      }
+    }, 40);
+    
+    return () => clearInterval(typeInterval);
+  }, [currentQuote, menuOpen]);
+
+  // Rotate quotes every 8 seconds
+  useEffect(() => {
+    if (!menuOpen) return;
+    
+    const quoteInterval = setInterval(() => {
+      setCurrentQuote(prev => {
+        const currentIndex = devQuotes.indexOf(prev);
+        return devQuotes[(currentIndex + 1) % devQuotes.length];
+      });
+    }, 8000);
+    
+    return () => clearInterval(quoteInterval);
+  }, [menuOpen]);
+
+  // Sync menuOpen state across instances via body class
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const isOpen = document.body.classList.contains('sidebar-open');
+      if (isOpen !== menuOpen) {
+        setMenuOpen(isOpen);
+      }
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, [menuOpen]);
+
+  // Toggle body class for push effect with scroll position preservation
+  const toggleSidebar = useCallback((open: boolean) => {
+    setMenuOpen(open);
+    if (open) {
+      // Save scroll position before locking
+      const scrollY = window.scrollY;
+      document.documentElement.style.setProperty('--scroll-position', `-${scrollY}px`);
+      document.body.style.top = `-${scrollY}px`;
+      document.body.classList.add('sidebar-open');
+      document.documentElement.classList.add('sidebar-open');
+      
+      // Set scroll position on push-wrapper for minimized preview
+      const pushWrapper = document.querySelector('.push-wrapper') as HTMLElement;
+      if (pushWrapper) {
+        pushWrapper.scrollTop = scrollY;
+      }
+      
+      setTimeout(() => ScrollTrigger.refresh(), 350);
+    } else {
+      // Restore scroll position after unlocking
+      const scrollY = document.body.style.top;
+      document.body.classList.remove('sidebar-open');
+      document.documentElement.classList.remove('sidebar-open');
+      document.body.style.top = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      setTimeout(() => ScrollTrigger.refresh(), 350);
+    }
+  }, []);
 
   // Track scroll for backdrop blur
   useEffect(() => {
@@ -65,9 +173,131 @@ const Navbar = ({ contentRef }) => {
   }, [contentRef]);
 
   const scrollTo = (id) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-    setMenuOpen(false);
+    // Close sidebar first, which restores scroll position
+    toggleSidebar(false);
+    // Wait for scroll position to be restored, then scroll to section
+    setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
   };
+
+  // Close sidebar on escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && menuOpen) {
+        toggleSidebar(false);
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [menuOpen, toggleSidebar]);
+
+  // Show arcade hint when user scrolls to bottom
+  useEffect(() => {
+    if (menuOpen) return; // Don't show if sidebar is already open
+    
+    const handleScroll = () => {
+      const scrolledToBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 200;
+      if (scrolledToBottom && !showArcadeHint) {
+        setShowArcadeHint(true);
+        // Auto-hide after 5 seconds
+        setTimeout(() => setShowArcadeHint(false), 5000);
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [menuOpen, showArcadeHint]);
+
+  // If sidebarOnly, only render the sidebar and overlay
+  if (sidebarOnly) {
+    return (
+      <>
+        {/* Game arcade - positioned in empty space above content */}
+        <div className={`sidebar-game-area ${menuOpen ? 'visible' : ''}`}>
+          <div className="arcade-header">
+            <span className="arcade-title">🕹️ Mini Arcade</span>
+            <span className="arcade-subtitle">Take a break!</span>
+          </div>
+          <div className="arcade-games">
+            <Suspense fallback={<div className="game-loading">Loading...</div>}>
+              {menuOpen && (
+                <>
+                  <FlappyGame />
+                  <SnakeGame />
+                  <ReactionGame />
+                </>
+              )}
+            </Suspense>
+          </div>
+        </div>
+
+        {/* Push Sidebar */}
+        <aside 
+          ref={sidebarRef}
+          className={`toc-sidebar ${menuOpen ? 'open' : ''}`}
+          aria-hidden={!menuOpen}
+        >
+          {/* Logo + Terminal Quote */}
+          <div className="toc-sidebar-easter">
+            <div className="rotating-logo-container">
+              <div className="rotating-logo">
+                <IsometricH size={48} className="text-blue-400" />
+              </div>
+            </div>
+            <div className="terminal-quote">
+              <div className="terminal-header">
+                <div className="terminal-dots">
+                  <span className="terminal-dot"></span>
+                  <span className="terminal-dot"></span>
+                  <span className="terminal-dot"></span>
+                </div>
+                <span className="terminal-title">quote.sh</span>
+              </div>
+              <div className="terminal-content">
+                <span className="terminal-prefix">$ </span>
+                <span className="terminal-text">{displayedText}</span>
+                <span className="terminal-cursor"></span>
+              </div>
+            </div>
+          </div>
+          <p className="toc-sidebar-tagline">full stack developer</p>
+
+          <div className="toc-sidebar-header">
+            <span className="toc-sidebar-title">Navigation</span>
+            <button 
+              className="toc-sidebar-close" 
+              onClick={() => toggleSidebar(false)}
+              aria-label="Close navigation"
+            >
+              <CloseIcon />
+            </button>
+          </div>
+          <nav className="toc-sidebar-nav">
+            {sections.map(({ id, label }) => (
+              <button 
+                key={id} 
+                className={`toc-link ${activeSection === id ? 'active' : ''}`}
+                onClick={() => scrollTo(id)}
+              >
+                <span className="toc-link-indicator"></span>
+                {label}
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        {/* Overlay for closing sidebar on click outside */}
+        {menuOpen && (
+          <div 
+            className="sidebar-overlay" 
+            onClick={() => toggleSidebar(false)}
+            aria-hidden="true"
+          />
+        )}
+      </>
+    );
+  }
 
   return (
     <>
@@ -92,29 +322,27 @@ const Navbar = ({ contentRef }) => {
             <button className="navbar-contact" onClick={() => scrollTo('contact')}>
               Contact
             </button>
-            <button className="navbar-menu" onClick={() => setMenuOpen(!menuOpen)}>
-              {menuOpen ? '✕' : '☰'}
-            </button>
+            <div className="navbar-menu-wrapper">
+              <button 
+                className="navbar-menu" 
+                onClick={() => {
+                  toggleSidebar(!menuOpen);
+                  setShowArcadeHint(false);
+                }}
+                aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={menuOpen}
+              >
+                ☰
+              </button>
+              {showArcadeHint && (
+                <div className="arcade-hint">
+                  <span>🕹️ Psst... there's an arcade in here!</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </nav>
-
-      {/* Mobile overlay */}
-      {menuOpen && (
-        <div className="mobile-overlay" onClick={() => setMenuOpen(false)}>
-          <div className="mobile-menu" onClick={e => e.stopPropagation()}>
-            {sections.map(({ id, label }) => (
-              <button 
-                key={id} 
-                className={`mobile-link ${activeSection === id ? 'active' : ''}`}
-                onClick={() => scrollTo(id)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </>
   );
 };

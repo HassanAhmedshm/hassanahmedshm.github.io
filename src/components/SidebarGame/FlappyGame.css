@@ -1,0 +1,87 @@
+.flappy-game {
+  position: relative;
+  width: calc(25% - 0.75rem);
+  min-width: 200px;
+  aspect-ratio: 260 / 180;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  outline: none;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+  transition: border-color 0.3s, box-shadow 0.3s;
+  flex-shrink: 0;
+}
+
+.flappy-game:hover,
+.flappy-game:focus {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+}
+
+.flappy-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.flappy-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(12, 18, 34, 0.85);
+  gap: 0.35rem;
+}
+
+.flappy-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fbbf24;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+}
+
+.flappy-score {
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.flappy-hint {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  animation: pulse-hint 2s ease-in-out infinite;
+}
+
+@keyframes pulse-hint {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.flappy-score-display {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.flappy-highscore {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 767px) {
+  .flappy-game {
+    width: 100%;
+    max-width: 300px;
+  }
+}

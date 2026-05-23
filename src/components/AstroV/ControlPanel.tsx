@@ -2,17 +2,15 @@ import { useState, useEffect } from 'react';
 import { Rocket, AlertTriangle } from 'lucide-react';
 import { AsteroidParams } from '../../utils/impactCalculator';
 import { fetchNASAAsteroids, NASAAsteroid } from '../../services/nasaApi';
+import { useSimulation } from '../../contexts/SimulationContext';
 
-interface ControlPanelProps {
-  params: AsteroidParams;
-  onParamsChange: (params: AsteroidParams) => void;
-  isDisabled?: boolean;
-}
-
-export default function ControlPanel({ params, onParamsChange, isDisabled = false }: ControlPanelProps) {
+export default function ControlPanel() {
+  const { params, setParams, simulationPhase } = useSimulation();
   const [asteroids, setAsteroids] = useState<NASAAsteroid[]>([]);
   const [loading, setLoading] = useState(true);
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
+
+  const isDisabled = simulationPhase !== 'idle';
 
   useEffect(() => {
     fetchNASAAsteroids().then((data) => {
@@ -22,15 +20,15 @@ export default function ControlPanel({ params, onParamsChange, isDisabled = fals
   }, []);
 
   const handleSliderChange = (key: keyof AsteroidParams, value: number) => {
-    onParamsChange({ ...params, [key]: value });
+    setParams(prev => ({ ...prev, [key]: value }));
   };
 
   const handleDensityChange = (density: 'rocky' | 'metallic' | 'icy') => {
-    onParamsChange({ ...params, density });
+    setParams(prev => ({ ...prev, density }));
   };
 
   const loadAsteroid = (asteroid: NASAAsteroid) => {
-    onParamsChange({
+    setParams({
       diameter: asteroid.diameter,
       velocity: asteroid.velocity,
       angle: 45,

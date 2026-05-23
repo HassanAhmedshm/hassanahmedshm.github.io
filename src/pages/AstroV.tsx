@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Target, Shield, BarChart3, Map, Home } from 'lucide-react';
 import SolarSystemViewer from '../components/AstroV/SolarSystemViewer';
 import ControlPanel from '../components/AstroV/ControlPanel';
@@ -7,72 +7,35 @@ import WorldMap from '../components/AstroV/WorldMap';
 import MitigationSimulator from '../components/AstroV/MitigationSimulator';
 import EducationalMode from '../components/AstroV/EducationalMode';
 import DataVisualization from '../components/AstroV/DataVisualization';
-import { AsteroidParams, calculateImpact, ImpactResults } from '../utils/impactCalculator';
+import { SimulationProvider, useSimulation } from '../contexts/SimulationContext';
 
 type Tab = 'home' | 'impact' | 'map' | 'mitigation' | 'data';
-type SimulationPhase = 'idle' | 'approaching' | 'impact' | 'analyzing' | 'finished';
 
-function App() {
-  const [params, setParams] = useState<AsteroidParams>({
-    diameter: 100,
-    velocity: 30,
-    angle: 45,
-    density: 'rocky',
-    locationType: 'land',
-  });
+function AstroVContent() {
+  const {
+    params,
+    results,
+    simulationPhase,
+    impactLocation,
+    setParams,
+    setSimulationPhase,
+    handleSimulate,
+    handleLocationSelect,
+  } = useSimulation();
 
-  const [results, setResults] = useState<ImpactResults | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('home');
-  const [impactLocation, setImpactLocation] = useState({ lat: 40.7128, lng: -74.006 });
   const [educationalMode, setEducationalMode] = useState(false);
-  const [simulationPhase, setSimulationPhase] = useState<SimulationPhase>('idle');
   const [isShaking, setIsShaking] = useState(false);
 
-  useEffect(() => {
-    const locationData = getCityPopulation(impactLocation.lat, impactLocation.lng);
-    const calculatedResults = calculateImpact(params, locationData.population);
-    setResults(calculatedResults);
-  }, [params, impactLocation]);
-
-  const handleSimulate = () => {
-    setSimulationPhase('approaching');
-    // Sequence: Approaching (3s) -> Impact (Shock 1s) -> Results
+  const handleSimulateWithShake = () => {
+    handleSimulate();
     setTimeout(() => {
-      setSimulationPhase('impact');
       setIsShaking(true);
       setTimeout(() => {
         setIsShaking(false);
-        setSimulationPhase('analyzing');
-        setTimeout(() => setSimulationPhase('finished'), 1000);
       }, 1000);
     }, 3000);
   };
-
-  const handleLocationSelect = (lat: number, lng: number) => {
-    setImpactLocation({ lat, lng });
-  };
-
-  function getCityPopulation(lat: number, lng: number): { population: number; city: string } {
-    const cities = [
-      { name: 'New York', lat: 40.7128, lng: -74.006, population: 8000000 },
-      { name: 'London', lat: 51.5074, lng: -0.1278, population: 9000000 },
-      { name: 'Tokyo', lat: 35.6762, lng: 139.6503, population: 14000000 },
-      { name: 'Los Angeles', lat: 34.0522, lng: -118.2437, population: 4000000 },
-      { name: 'Paris', lat: 48.8566, lng: 2.3522, population: 2200000 },
-      { name: 'Mumbai', lat: 19.076, lng: 72.8777, population: 20000000 },
-    ];
-
-    for (const city of cities) {
-      const distance = Math.sqrt(
-        Math.pow(lat - city.lat, 2) + Math.pow(lng - city.lng, 2)
-      );
-      if (distance < 1) {
-        return { population: city.population, city: city.name };
-      }
-    }
-
-    return { population: 0, city: 'Ocean/Rural Area' };
-  }
 
   const tabs = [
     { id: 'home' as const, label: 'Home', icon: Home },
@@ -88,37 +51,39 @@ function App() {
       <div className="starfield" />
       
       <header className="bg-gray-900/80 backdrop-blur-sm border-b border-gray-800 z-40">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3 md:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <img src="/images/astrov.png" alt="AstroV Logo" className="w-12 h-12 object-contain" />
-              <div>
-                <h1 className="text-3xl font-bold text-white tracking-tight">AstroV</h1>
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">Asteroid Impact Simulator</p>
+            <div className="flex items-center gap-2 md:gap-4">
+              <img src="/images/astrov.png" alt="AstroV Logo" className="w-10 h-10 md:w-12 md:h-12 object-contain" />
+              <div className="hidden sm:block">
+                <h1 className="text-xl md:text-3xl font-bold text-white tracking-tight">AstroV</h1>
+                <p className="text-[10px] md:text-xs font-medium text-gray-400 uppercase tracking-widest">Asteroid Impact Simulator</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
               <a 
                 href="GITHUB_REPO_URL_HERE" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2"
+                className="bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 text-white p-2.5 md:px-6 md:py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2"
+                title="GitHub"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                 </svg>
-                GitHub
+                <span className="hidden md:inline">GitHub</span>
               </a>
               <a 
-                href="" 
-                className="bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2"
+                href="/" 
+                className="bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 text-white p-2.5 md:px-6 md:py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2"
+                title="Portfolio"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                   <polyline points="15 3 21 3 21 9"></polyline>
                   <line x1="10" y1="14" x2="21" y2="3"></line>
                 </svg>
-                Portfolio
+                <span className="hidden md:inline">Portfolio</span>
               </a>
             </div>
           </div>
@@ -126,22 +91,23 @@ function App() {
       </header>
 
       <nav className="bg-gray-900/60 backdrop-blur-sm border-b border-gray-800 sticky top-0 z-30">
-        <div className="container mx-auto px-4">
-          <div className="flex gap-2 overflow-x-auto">
+        <div className="container mx-auto px-2 md:px-4">
+          <div className="flex gap-1 md:gap-2 overflow-x-auto scrollbar-hide py-1">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-6 py-3 font-medium transition-all whitespace-nowrap ${
+                  className={`flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-6 py-2.5 md:py-3 font-medium transition-all whitespace-nowrap text-xs md:text-sm rounded-lg md:rounded-none ${
                     activeTab === tab.id
-                      ? 'text-blue-400 border-b-2 border-blue-400 bg-blue-500/10'
+                      ? 'text-blue-400 md:border-b-2 border-blue-400 bg-blue-500/20 md:bg-blue-500/10'
                       : 'text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
                   }`}
                 >
-                  <Icon size={18} />
-                  <span>{tab.label}</span>
+                  <Icon size={16} className="md:w-[18px] md:h-[18px]" />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
                 </button>
               );
             })}
@@ -332,7 +298,7 @@ function App() {
                 {simulationPhase === 'idle' && (
                   <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-10">
                     <button 
-                      onClick={handleSimulate}
+                      onClick={handleSimulateWithShake}
                       className="bg-red-600 hover:bg-red-700 text-white px-12 py-6 rounded-full text-2xl font-black uppercase tracking-widest shadow-[0_0_50px_rgba(220,38,38,0.5)] transition-all transform hover:scale-110 active:scale-95 flex items-center gap-4"
                     >
                       <Target size={32} />
@@ -482,6 +448,14 @@ function App() {
         onToggle={() => setEducationalMode(!educationalMode)}
       />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <SimulationProvider>
+      <AstroVContent />
+    </SimulationProvider>
   );
 }
 

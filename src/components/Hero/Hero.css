@@ -1,6 +1,7 @@
 .hero {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -14,7 +15,6 @@
   z-index: 1;
   text-align: center;
   padding: 2rem;
-  margin-top: -40px;
 }
 
 .hero-title {
