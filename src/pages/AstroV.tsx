@@ -7,7 +7,7 @@ import WorldMap from '../components/AstroV/WorldMap';
 import MitigationSimulator from '../components/AstroV/MitigationSimulator';
 import EducationalMode from '../components/AstroV/EducationalMode';
 import DataVisualization from '../components/AstroV/DataVisualization';
-import { SimulationProvider, useSimulation } from '../contexts/SimulationContext';
+import { SimulationProvider, useSimulation } from '../components/contexts/SimulationContext';
 
 type Tab = 'home' | 'impact' | 'map' | 'mitigation' | 'data';
 
@@ -54,7 +54,10 @@ function AstroVContent() {
         <div className="container mx-auto px-4 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 md:gap-4">
-              <img src="/images/astrov.png" alt="AstroV Logo" className="w-10 h-10 md:w-12 md:h-12 object-contain" />
+              <picture className="contents">
+                <source srcSet="/images/optimized/astrov.webp" type="image/webp" />
+                <img src="/images/astrov.png" alt="AstroV Logo" className="w-10 h-10 md:w-12 md:h-12 object-contain" />
+              </picture>
               <div className="hidden sm:block">
                 <h1 className="text-xl md:text-3xl font-bold text-white tracking-tight">AstroV</h1>
                 <p className="text-[10px] md:text-xs font-medium text-gray-400 uppercase tracking-widest">Asteroid Impact Simulator</p>
@@ -83,7 +86,8 @@ function AstroVContent() {
                   <polyline points="15 3 21 3 21 9"></polyline>
                   <line x1="10" y1="14" x2="21" y2="3"></line>
                 </svg>
-                <span className="hidden md:inline">Portfolio</span>
+                <span className="hidden md:inline">Back to Portfolio</span>
+                <span className="md:hidden">Back</span>
               </a>
             </div>
           </div>
@@ -420,7 +424,10 @@ function AstroVContent() {
         <div className="container mx-auto px-4 py-12">
           <div className="grid md:grid-cols-3 gap-8 items-center border-b border-gray-800 pb-8 mb-8">
             <div className="flex items-center gap-3">
-              <img src="/images/astrov.png" alt="AstroV Logo" className="w-10 h-10 object-contain grayscale opacity-50" />
+              <picture className="contents">
+                <source srcSet="/images/optimized/astrov.webp" type="image/webp" />
+                <img src="/images/astrov.png" alt="AstroV Logo" className="w-10 h-10 object-contain grayscale opacity-50" />
+              </picture>
               <span className="text-xl font-bold text-gray-500 tracking-tighter">AstroV</span>
             </div>
             <div className="text-center">

@@ -25,10 +25,16 @@ interface DeviceCapabilities {
 
 /**
  * Default capabilities for SSR/initial render
+ * Check isMobile immediately if window is available
  */
+const getInitialIsMobile = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(max-width: 768px)').matches;
+};
+
 const defaultCapabilities: DeviceCapabilities = {
   hardwareConcurrency: 4,
-  isMobile: false,
+  isMobile: getInitialIsMobile(),
   hasWebGL: true,
   prefersReducedMotion: false,
   isTouchDevice: false,

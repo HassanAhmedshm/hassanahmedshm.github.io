@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Flame, Mountain, Waves, Activity, Users, Wind } from 'lucide-react';
-import { useSimulation } from '../../contexts/SimulationContext';
+import { useSimulation } from '../contexts/SimulationContext';
 
 const NumberCounter = ({ value, duration = 1000, formatter = (n: number) => n.toString() }: { value: number, duration?: number, formatter?: (n: number) => string }) => {
   const [count, setCount] = useState(0);

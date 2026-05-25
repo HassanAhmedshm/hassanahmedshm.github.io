@@ -3,16 +3,17 @@
    ============================================ */
 
 .about {
-  min-height: 100vh;
+  min-height: 100svh;
   min-height: 100dvh;
   background: var(--bg-dark);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
+  padding: var(--space-16) var(--space-8);
   margin-top: 0;
   position: relative;
   z-index: 1;
+  overflow: visible;
 }
 
 .about-grid {
@@ -30,7 +31,7 @@
   position: relative;
   width: 2px;
   height: 80vh;
-  background: var(--border);
+  background: var(--gradient-primary);
   transform-origin: center center;
   align-self: center;
   justify-self: center;
@@ -48,9 +49,9 @@
 }
 
 .about-image {
-  max-width: 100%;
-  width: 100%;
-  max-height: 500px;
+  max-width: 85%;
+  width: 85%;
+  max-height: 400px;
   object-fit: cover;
   border-radius: 12px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
@@ -105,21 +106,18 @@
 }
 
 .about-title {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: clamp(2rem, 5vw, 3rem);
-  color: var(--text);
-  margin-bottom: 1.5rem;
+  font-size: var(--fs-4xl);
+  font-weight: var(--fw-bold);
   letter-spacing: -0.02em;
+  margin-bottom: var(--space-6);
+  color: var(--text);
 }
 
 .about-text {
-  font-family: var(--font-sans);
-  font-weight: 400;
-  font-size: 1.125rem;
+  font-size: var(--fs-base);
+  color: var(--text-secondary);
   line-height: 1.8;
-  color: var(--text-muted);
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 .about-text:last-child {
@@ -131,11 +129,8 @@
    ============================================ */
 @media (max-width: 767px) {
   .about {
-    padding: 3rem 1.5rem;
-    min-height: auto;
-    align-items: flex-start;
-    padding-top: 4rem;
-    padding-bottom: 4rem;
+    padding: var(--space-12) var(--space-6);
+    align-items: center;
   }
 
   .about-grid {
@@ -175,7 +170,7 @@
   }
 
   .about-text {
-    font-size: 1rem;
+    font-size: var(--fs-base);
     line-height: 1.7;
   }
 }

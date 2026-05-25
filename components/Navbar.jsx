@@ -7,7 +7,7 @@ const navItems = [
   { label: 'Projects', href: '#projects' },
   { label: 'Timeline', href: '#timeline' },
   { label: 'Contact', href: '#contact' },
-];
+]; 
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -47,7 +47,7 @@ const Navbar = () => {
             </a>
           ))}
           <a
-            href="https://drive.google.com/file/d/1I4ZAJ4AnQ0LI9CQF46GJgAuCXZwaZBKf/view?usp=sharing"
+            href="https://drive.google.com/file/d/1ynx2KU9vZnzFneyujUu6o50EVEJ2reeO/view?usp=drive_link"
             target="_blank"
             rel="noopener noreferrer"
             className="px-4 py-2 text-sm font-medium bg-white text-dark rounded hover:bg-gray-200 transition-colors"
@@ -86,7 +86,7 @@ const Navbar = () => {
                 </a>
               ))}
               <a
-                href="https://drive.google.com/file/d/1I4ZAJ4AnQ0LI9CQF46GJgAuCXZwaZBKf/view?usp=sharing"
+                href="https://drive.google.com/file/d/1ynx2KU9vZnzFneyujUu6o50EVEJ2reeO/view?usp=drive_link"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 px-4 py-3 text-center font-medium bg-primary text-white rounded hover:bg-primary-dark transition-colors"

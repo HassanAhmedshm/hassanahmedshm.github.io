@@ -117,7 +117,7 @@ const StarField = ({ density = 100, speed = 1, deferred = false }) => {
     return <div className="star-field" style={{ opacity: 0 }} />;
   }
 
-  return <canvas ref={canvasRef} className="star-field" />;
+  return <canvas ref={canvasRef} className="star-field" aria-hidden="true" />;
 };
 
 export default StarField;

@@ -1,14 +1,9 @@
 /* ============================================
-   NAVBAR SYSTEM - Simple Top Navigation
+   NAVBAR SYSTEM
    ============================================ */
 
-/* Sidebar width variable */
-:root {
-  --sidebar-width: 280px;
-}
-
 .navbar {
-  background: rgba(10, 10, 10, 0.85);
+  background: var(--nav-bg);
   backdrop-filter: blur(12px);
   position: fixed;
   top: 0;
@@ -16,19 +11,19 @@
   width: 100%;
   z-index: 50;
   padding: 1.5rem 2rem;
-  transition: padding 0.3s, transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: padding 0.3s, transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
   margin: 0;
   border: none;
 }
 
-/* When sidebar is open, navbar shrinks with content - disabled since body transforms */
-/* body.sidebar-open .navbar {
-  width: calc(100% - var(--sidebar-width));
-  transform: translateX(0);
-} */
-
 .navbar.scrolled {
   padding: 1rem 2rem;
+}
+
+.navbar-invisible {
+  opacity: 0;
+  transform: translateY(-100%);
+  pointer-events: none;
 }
 
 .navbar-container {
@@ -40,9 +35,6 @@
 }
 
 .navbar-logo {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--primary);
   background: none;
   border: none;
   cursor: pointer;
@@ -59,7 +51,9 @@
   display: flex;
 }
 
-.navbar-social:hover { color: var(--text); }
+.navbar-social:hover {
+  color: var(--text);
+}
 
 .navbar-right {
   display: flex;
@@ -69,7 +63,7 @@
 
 .navbar-contact {
   padding: 0.5rem 1rem;
-  background: var(--primary);
+  background: var(--accent-blue);
   color: var(--text);
   border: none;
   border-radius: 4px;
@@ -78,7 +72,13 @@
   transition: background 0.2s;
 }
 
-.navbar-contact:hover { background: var(--primary-dark); }
+.navbar-contact:hover {
+  background: var(--accent-blue-dark);
+}
+
+.navbar-menu-wrapper {
+  position: relative;
+}
 
 .navbar-menu {
   font-size: 1.25rem;
@@ -89,57 +89,213 @@
   cursor: pointer;
 }
 
-.navbar-menu:hover { color: var(--text); }
+.navbar-menu:hover {
+  color: var(--text);
+}
 
-/* ============================================
-   MOBILE OVERLAY - Now unused, kept for reference
-   ============================================ */
-
-/* ============================================
-   PUSH SIDEBAR (Table of Contents)
-   ============================================ */
-.toc-sidebar {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: calc(var(--sidebar-width) + 2rem);
-  height: 100vh;
-  padding: 2rem;
-  box-sizing: border-box;
-  z-index: 100;
+/* TOC sidebar actions row */
+.toc-sidebar-actions {
   display: flex;
-  flex-direction: column;
-  /* Sidebar appears instantly when open - content pushes to reveal it */
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, background 0.2s, transform 0.2s var(--ease-out-expo);
+}
+
+.theme-toggle:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+  transform: scale(1.1);
+}
+
+.theme-toggle:active {
+  transform: scale(0.9);
+}
+
+@media (max-width: 767px) {
+  .theme-toggle {
+    padding: 0.35rem;
+  }
+}
+
+/* Navbar link hover underline animation */
+.navbar-social {
+  position: relative;
+}
+
+.navbar-social::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 100%;
+  height: 1px;
+  background: var(--accent-blue);
+  transform: scaleX(0) translateX(-50%);
+  transform-origin: center;
+  transition: transform 0.25s var(--ease-out-expo);
+}
+
+.navbar-social:hover::after {
+  transform: scaleX(1) translateX(-50%);
+}
+
+.navbar-contact {
+  position: relative;
+}
+
+.navbar-contact::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 70%;
+  height: 1px;
+  background: var(--accent-blue);
+  transform: scaleX(0) translateX(-50%);
+  transform-origin: center;
+  transition: transform 0.25s var(--ease-out-expo);
+}
+
+.navbar-contact:hover::after {
+  transform: scaleX(1) translateX(-50%);
+}
+
+.hamburger-icon {
+  display: inline-block;
+}
+
+/* ============================================
+   COMMAND CENTER OVERLAY
+   ============================================ */
+
+.command-center-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+  background: var(--overlay-bg);
+  backdrop-filter: blur(12px);
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-              visibility 0s linear 0.35s;
+  transform: translateY(-100%);
+  transition:
+    opacity 0.35s ease,
+    transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+    visibility 0s linear 0.4s;
+  pointer-events: none;
 }
 
-.toc-sidebar.open {
+.command-center-overlay.open {
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.1s,
-              visibility 0s linear 0s;
+  transform: translateY(0);
+  transition:
+    opacity 0.35s ease,
+    transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+    visibility 0s linear 0s;
+  pointer-events: auto;
 }
 
-/* Fun animated element at top */
+.command-center-shell {
+  width: min(1320px, calc(100vw - 2rem));
+  height: calc(100svh - 2rem);
+  margin: 1rem auto;
+  padding: 1.75rem;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: linear-gradient(145deg, var(--terminal-bg), var(--overlay-bg));
+  overflow: hidden;
+}
+
+.command-center-grid {
+  display: grid;
+  grid-template-columns: minmax(560px, 1.4fr) minmax(280px, 1fr);
+  gap: 1.5rem;
+  height: 100%;
+  min-height: 0;
+}
+
+.command-center-arcade {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 0;
+}
+
+.arcade-header {
+  margin-bottom: 0.5rem;
+}
+
+.arcade-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text);
+  display: block;
+}
+
+.arcade-subtitle {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.arcade-games {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 1.1rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.game-loading {
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(12, 18, 34, 0.9);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+/* ============================================
+   NAVIGATION COLUMN
+   ============================================ */
+
+.toc-sidebar {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0.25rem 0.5rem 1rem;
+  border-left: 1px solid rgba(148, 163, 184, 0.2);
+  min-height: 0;
+  overflow: hidden;
+}
+
 .toc-sidebar-easter {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 1.5rem;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  position: relative;
-  background: rgba(255, 255, 255, 0.02);
+  gap: 1rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: rgba(255, 255, 255, 0.03);
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* 3D Logo */
-.rotating-logo-container {
-  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .rotating-logo {
@@ -151,16 +307,11 @@
   transform: scale(1.1);
 }
 
-/* Terminal Quote */
 .terminal-quote {
   flex: 1;
   font-family: var(--font-mono);
   font-size: 0.7rem;
-  line-height: 1.5;
   color: var(--text-muted);
-  min-width: 0;
-  height: 80px;
-  overflow: hidden;
 }
 
 .terminal-header {
@@ -187,16 +338,11 @@
 
 .terminal-title {
   font-size: 0.6rem;
-  color: var(--text-muted);
-  opacity: 0.6;
-}
-
-.terminal-content {
-  position: relative;
+  opacity: 0.7;
 }
 
 .terminal-prefix {
-  color: var(--primary);
+  color: var(--accent-blue);
 }
 
 .terminal-text {
@@ -207,7 +353,7 @@
   display: inline-block;
   width: 6px;
   height: 12px;
-  background: var(--primary);
+  background: var(--accent-blue);
   margin-left: 2px;
   animation: cursor-blink 1s step-end infinite;
   vertical-align: text-bottom;
@@ -224,7 +370,7 @@
   color: var(--text-muted);
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   opacity: 0.6;
 }
 
@@ -232,7 +378,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 0 1rem 0;
+  padding-bottom: 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 0.5rem;
 }
@@ -251,8 +397,7 @@
   color: var(--text-muted);
   cursor: pointer;
   padding: 0.5rem;
-  margin: -0.5rem;
-  border-radius: 4px;
+  border-radius: 6px;
   transition: color 0.2s, background 0.2s;
 }
 
@@ -264,32 +409,33 @@
 .toc-sidebar-nav {
   display: flex;
   flex-direction: column;
-  padding: 0;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
   overflow-y: auto;
-  flex: 1;
+  overflow-x: hidden;
+  min-height: 0;
 }
 
 .toc-link {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 0;
+  padding: 0.8rem 0.25rem;
   font-size: 1rem;
   color: var(--text-muted);
   background: none;
   border: none;
   cursor: pointer;
   text-align: left;
-  transition: color 0.2s, padding-left 0.2s;
+  transition: color 0.2s;
 }
 
 .toc-link:hover {
   color: var(--text);
-  padding-left: 0.5rem;
 }
 
 .toc-link.active {
-  color: var(--primary);
+  color: var(--accent-blue);
 }
 
 .toc-link-indicator {
@@ -306,185 +452,69 @@
 }
 
 .toc-link.active .toc-link-indicator {
-  background: var(--primary);
-  border-color: var(--primary);
+  background: var(--gradient-primary);
+  border-color: transparent;
   transform: scale(1.2);
-}
-
-/* Overlay for click-to-close - covers the scaled content */
-.sidebar-overlay {
-  position: fixed;
-  inset: 0;
-  background: transparent;
-  z-index: 50;
-  cursor: pointer;
-}
-
-/* ============================================
-   GAME AREA - Empty space above content
-   ============================================ */
-.sidebar-game-area {
-  position: fixed;
-  top: 2rem;
-  left: 2rem;
-  right: calc(var(--sidebar-width) + 4rem);
-  bottom: auto;
-  z-index: 60;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(20px);
-  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s,
-              visibility 0s linear 0.4s,
-              transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s;
-}
-
-.sidebar-game-area.visible {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s,
-              visibility 0s linear 0s,
-              transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s;
-}
-
-.arcade-header {
-  margin-bottom: 1rem;
-}
-
-.arcade-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text);
-  display: block;
-  margin-bottom: 0.25rem;
-}
-
-.arcade-subtitle {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.arcade-games {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.game-loading {
-  width: calc(25% - 0.75rem);
-  min-width: 200px;
-  aspect-ratio: 260 / 180;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(12, 18, 34, 0.9);
-  border-radius: 8px;
-  color: var(--text-muted);
-  font-size: 0.75rem;
-}
-
-/* Arcade hint tooltip */
-.navbar-menu-wrapper {
-  position: relative;
-}
-
-.arcade-hint {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 0.75rem;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #1e1b4b, #312e81);
-  border: 1px solid rgba(139, 92, 246, 0.4);
-  border-radius: 8px;
-  white-space: nowrap;
-  font-size: 0.8rem;
-  color: #e5e5e5;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-  animation: hint-bounce 0.5s ease-out, hint-pulse 2s ease-in-out infinite 0.5s;
-  z-index: 100;
-}
-
-.arcade-hint::before {
-  content: '';
-  position: absolute;
-  top: -6px;
-  right: 12px;
-  width: 12px;
-  height: 12px;
-  background: linear-gradient(135deg, #1e1b4b, #312e81);
-  border-left: 1px solid rgba(139, 92, 246, 0.4);
-  border-top: 1px solid rgba(139, 92, 246, 0.4);
-  transform: rotate(45deg);
-}
-
-@keyframes hint-bounce {
-  0% { opacity: 0; transform: translateY(-10px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes hint-pulse {
-  0%, 100% { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); }
-  50% { box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3); }
 }
 
 /* ============================================
    RESPONSIVE
    ============================================ */
-@media (max-width: 767px) {
-  :root {
-    --sidebar-width: 100%;
+
+@media (max-width: 1024px) {
+  .command-center-grid {
+    grid-template-columns: 1fr;
   }
-  .navbar { padding: 1rem; }
-  .navbar.scrolled { padding: 0.75rem 1rem; }
-  
-  /* Full-screen sidebar on mobile */
+
   .toc-sidebar {
+    border-left: none;
+    padding: 0;
     width: 100%;
-    height: 100%;
-    padding: 1.5rem;
-    padding-top: 2rem;
-  }
-  
-  .toc-link {
-    padding: 0.875rem 1.25rem;
-    font-size: 1rem;
-  }
-
-  /* Hide arcade on mobile - sidebar takes full screen */
-  .sidebar-game-area {
-    display: none;
-  }
-
-  .arcade-games {
-    flex-direction: column;
-    align-items: center;
+    max-width: 420px;
+    margin: 0 auto;
+    justify-content: center;
+    min-height: calc(100svh - 6rem);
   }
 }
 
-@media (max-width: 480px) {
-  .toc-sidebar {
-    padding: 1.25rem;
-    padding-top: 1.5rem;
-  }
-  
-  .toc-sidebar-easter {
-    flex-direction: column;
-    gap: 1rem;
+@media (max-width: 767px) {
+  .navbar {
     padding: 1rem;
-    align-items: flex-start;
   }
-  
-  .terminal-quote {
-    font-size: 0.65rem;
-    height: auto;
-    max-height: 60px;
-    width: 100%;
-    text-align: left;
-  }
-  
-  .toc-link {
+
+  .navbar.scrolled {
     padding: 0.75rem 1rem;
-    font-size: 0.9375rem;
+  }
+
+  .navbar-contact {
+    display: none;
+  }
+
+  .command-center-overlay {
+    background: var(--bg-dark);
+    backdrop-filter: none;
+  }
+
+  .command-center-shell {
+    width: 100vw;
+    height: 100svh;
+    margin: 0;
+    padding: 1.5rem 1.25rem;
+    border-radius: 0;
+    border: none;
+    background: var(--bg-dark);
+  }
+
+  .toc-sidebar-easter {
+    margin-bottom: 1.25rem;
+  }
+
+  .toc-sidebar-nav {
+    align-items: center;
+  }
+
+  .toc-link {
+    width: min(100%, 280px);
+    justify-content: center;
   }
 }

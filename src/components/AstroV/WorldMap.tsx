@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Crosshair, ChevronUp, ChevronDown, Hand } from 'lucide-react';
-import { useSimulation } from '../../contexts/SimulationContext';
+import { useSimulation } from '../contexts/SimulationContext';
 
 export default function WorldMap() {
   const {

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Rocket, AlertTriangle } from 'lucide-react';
 import { AsteroidParams } from '../../utils/impactCalculator';
 import { fetchNASAAsteroids, NASAAsteroid } from '../../services/nasaApi';
-import { useSimulation } from '../../contexts/SimulationContext';
+import { useSimulation } from '../contexts/SimulationContext';
 
 export default function ControlPanel() {
   const { params, setParams, simulationPhase } = useSimulation();

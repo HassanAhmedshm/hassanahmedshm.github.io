@@ -6,7 +6,7 @@
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100svh;
   background-color: rgb(3, 7, 18);
   z-index: 9999;
 }
@@ -14,8 +14,8 @@
 .loading-spinner__circle {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(59, 130, 246, 0.2);
-  border-top-color: #3b82f6;
+  border: 3px solid var(--accent-blue-glow);
+  border-top-color: var(--accent-blue);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -42,7 +42,7 @@
 @media (prefers-reduced-motion: reduce) {
   .loading-spinner__circle {
     animation: none;
-    border-color: #3b82f6;
+    border-color: var(--accent-blue);
     opacity: 0.5;
   }
 }

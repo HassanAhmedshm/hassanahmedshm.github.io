@@ -49,7 +49,7 @@ const Hero = () => {
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-400 font-mono h-16">
-            <span className="text-primary">{'>'}</span> <TypewriterText text="Full Stack Developer & Prompt Engineer" delay={500} />
+            <span className="text-primary">{'>'}</span> <TypewriterText text="Full Stack Developer" delay={500} />
             <span className="animate-pulse">_</span>
           </p>
 
@@ -62,7 +62,7 @@ const Hero = () => {
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </a>
             <a
-              href="https://drive.google.com/file/d/1I4ZAJ4AnQ0LI9CQF46GJgAuCXZwaZBKf/view?usp=sharing"
+              href="https://drive.google.com/file/d/1ynx2KU9vZnzFneyujUu6o50EVEJ2reeO/view?usp=drive_link"
               target="_blank"
               rel="noopener noreferrer"
               className="px-6 py-3 bg-surface border border-border text-gray-300 font-medium rounded hover:bg-border transition-all flex items-center gap-2"

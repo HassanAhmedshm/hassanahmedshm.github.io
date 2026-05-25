@@ -4,6 +4,18 @@ import { useState } from 'react';
  * ProjectPanel - Individual project panel with hover effects
  * Validates: Requirements 9.3, 9.4
  */
+const getWebpSrc = (src: string) => {
+  const filename = src.split('/').pop()!;
+  const name = filename.replace(/\.[^.]+$/, '');
+  return `/images/optimized/${name}.webp`;
+};
+
+const getAvifSrc = (src: string) => {
+  const filename = src.split('/').pop()!;
+  const name = filename.replace(/\.[^.]+$/, '');
+  return `/images/optimized/${name}.avif`;
+};
+
 const ProjectPanel = ({ project, columnIndex, onMouseEnter, onMouseMove, onMouseLeave, isMobile }) => {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
@@ -59,18 +71,22 @@ const ProjectPanel = ({ project, columnIndex, onMouseEnter, onMouseMove, onMouse
             {imageLoading && (
               <div className="project-image-placeholder" />
             )}
-            <img 
-              src={project.image} 
-              alt={project.title}
-              className="project-image"
-              onLoad={() => setImageLoading(false)}
-              onError={() => {
-                setImageLoading(false);
-                setImageError(true);
-              }}
-              loading="lazy"
-              style={{ opacity: imageLoading ? 0 : 1 }}
-            />
+            <picture className="contents">
+              <source srcSet={getWebpSrc(project.image)} type="image/webp" />
+              <source srcSet={getAvifSrc(project.image)} type="image/avif" />
+              <img 
+                src={project.image} 
+                alt={project.title}
+                className="project-image"
+                onLoad={() => setImageLoading(false)}
+                onError={() => {
+                  setImageLoading(false);
+                  setImageError(true);
+                }}
+                loading="lazy"
+                style={{ opacity: imageLoading ? 0 : 1 }}
+              />
+            </picture>
           </>
         )}
       </div>

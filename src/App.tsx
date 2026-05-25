@@ -1,20 +1,31 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import Lenis from 'lenis';
-import gsap from 'gsap';
+import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import LoadingScreen from './components/LoadingScreen/LoadingScreen';
+import CombIntro from './components/Transitions/CombIntro';
 import Navbar from './components/Navbar/Navbar';
-import Hero from './components/Hero/Hero';
-import Manifesto from './components/Manifesto/Manifesto';
-import About from './components/About/About';
-import Projects from './components/Projects/Projects';
 import Contact from './components/Contact/Contact';
 import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
+import ErrorBoundary from './components/ErrorBoundary';
+import SectionSkeleton from './components/Skeleton/SectionSkeleton';
+import SectionError from './components/SectionError/SectionError';
+import NotFound from './pages/NotFound';
+import { useScrollProgress } from './hooks/useScrollProgress';
 import './styles/index.css';
 
-// Lazy load AstroV page for code splitting (Requirements 8.1, 8.2)
+// Lazy load portfolio sections for code splitting
+const Hero = lazy(() => import('./components/Hero/Hero'));
+const Manifesto = lazy(() => import('./components/Manifesto/Manifesto'));
+const About = lazy(() => import('./components/About/About'));
+const Projects = lazy(() => import('./components/Projects/Projects'));
+
+// Lazy load sub-pages for code splitting
 const AstroV = lazy(() => import('./pages/AstroV'));
+const Optiscan = lazy(() => import('./pages/Optiscan'));
+const AG = lazy(() => import('./pages/AG'));
+const LifeTrack = lazy(() => import('./pages/LifeTrack'));
+
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -23,37 +34,42 @@ gsap.registerPlugin(ScrollTrigger);
  */
 function Portfolio() {
   const [isLoading, setIsLoading] = useState(true);
-  const [contentVisible, setContentVisible] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const lenisRef = useRef<Lenis | null>(null);
   const contentRef = useRef<HTMLElement | null>(null);
+  const scrollProgress = useScrollProgress();
   
-  // Check prefers-reduced-motion on mount
+  // Check prefers-reduced-motion and localStorage motion toggle
   useEffect(() => {
     const checkReducedMotion = () => {
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      setReducedMotion(prefersReduced);
+      const stored = localStorage.getItem('motion-enabled');
+      const userDisabled = stored === 'false';
+      const isReduced = prefersReduced || userDisabled;
+      setReducedMotion(isReduced);
       
-      if (prefersReduced) {
+      if (isReduced) {
         setIsLoading(false);
-        setContentVisible(true);
       }
     };
     
     checkReducedMotion();
     
+    const handleStorageChange = () => {
+      checkReducedMotion();
+    };
+    window.addEventListener('storage', handleStorageChange);
+    
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      const prefersReduced = e.matches;
-      setReducedMotion(prefersReduced);
-      if (prefersReduced && isLoading) {
-        setIsLoading(false);
-        setContentVisible(true);
-      }
+    const handleChange = () => {
+      checkReducedMotion();
     };
     
     mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
   
   // Initialize Lenis smooth scroll
@@ -77,33 +93,41 @@ function Portfolio() {
     lenis.on('scroll', ScrollTrigger.update);
     
     // Connect Lenis to GSAP ticker
-    gsap.ticker.add((time) => {
+    const tickerCallback = (time: number) => {
       lenis.raf(time * 1000);
-    });
+    };
+    gsap.ticker.add(tickerCallback);
     
     // Disable lag smoothing for frame-accurate scroll
     gsap.ticker.lagSmoothing(0);
     
     return () => {
       lenis.destroy();
-      gsap.ticker.remove(lenis.raf);
+      gsap.ticker.remove(tickerCallback);
     };
   }, [reducedMotion]);
   
   // Handle loading complete
   const handleLoadingComplete = () => {
     setIsLoading(false);
-    
-    // Enable content visibility with fade-in
+
+    try {
+      localStorage.setItem('intro-seen', 'true');
+    } catch {}
+
+    // Refresh ScrollTrigger after intro overlay exits
     setTimeout(() => {
-      setContentVisible(true);
-      
-      // Refresh ScrollTrigger after content becomes visible
-      setTimeout(() => {
-        ScrollTrigger.refresh();
-      }, 100);
-    }, 50);
+      ScrollTrigger.refresh();
+    }, 120);
   };
+
+  const introSeen = (() => {
+    try {
+      return localStorage.getItem('intro-seen') === 'true';
+    } catch {
+      return false;
+    }
+  })();
   
   // Refresh ScrollTrigger on layout changes (e.g., sidebar toggle)
   const refreshScrollTrigger = () => {
@@ -115,36 +139,54 @@ function Portfolio() {
     if (contentRef.current) {
       (contentRef.current as any).refreshScrollTrigger = refreshScrollTrigger;
     }
-  }, [contentVisible]);
+  }, []);
 
   return (
     <>
-      {/* Sidebar - must be outside the push wrapper */}
-      {contentVisible && <Navbar contentRef={contentRef} sidebarOnly />}
-      
-      {/* Push wrapper - this entire container gets scaled/pushed */}
-      <div className="push-wrapper">
-        {/* Loading Screen - only show if not reduced motion */}
-        {!reducedMotion && (
-          <LoadingScreen onComplete={handleLoadingComplete} />
-        )}
-        
-        {/* Navigation - inside push wrapper so it transforms with content */}
-        {contentVisible && <Navbar contentRef={contentRef} />}
-        
-        {/* Main content with opacity transition */}
-        <main 
+      <a
+        href="#main-content"
+        className="skip-to-content"
+      >
+        Skip to content
+      </a>
+
+      {!reducedMotion && isLoading && !introSeen && (
+        <CombIntro onComplete={handleLoadingComplete} />
+      )}
+
+      <div
+        className="content-area"
+        data-loading={isLoading && !introSeen && !reducedMotion}
+      >
+        <Navbar contentRef={contentRef} />
+
+        <div className="global-scroll-progress" style={{ width: `${scrollProgress * 100}%` }} />
+
+        <main
           ref={contentRef}
+          id="main-content"
           className="main-content"
-          style={{
-            opacity: contentVisible ? 1 : 0,
-            transition: reducedMotion ? 'none' : 'opacity 0.6s ease'
-          }}
         >
-          <Hero />
-          <Manifesto />
-          <About />
-          <Projects />
+          <Suspense fallback={<SectionSkeleton type="hero" />}>
+            <ErrorBoundary fallback={<SectionError section="hero" />}>
+              <Hero reducedMotion={reducedMotion} />
+            </ErrorBoundary>
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton type="about" />}>
+            <ErrorBoundary fallback={<SectionError section="about" />}>
+              <About reducedMotion={reducedMotion} />
+            </ErrorBoundary>
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton type="manifesto" />}>
+            <ErrorBoundary fallback={<SectionError section="manifesto" />}>
+              <Manifesto reducedMotion={reducedMotion} />
+            </ErrorBoundary>
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton type="projects" />}>
+            <ErrorBoundary fallback={<SectionError section="projects" />}>
+              <Projects reducedMotion={reducedMotion} />
+            </ErrorBoundary>
+          </Suspense>
           <Contact />
         </main>
       </div>
@@ -165,6 +207,31 @@ function App() {
             </Suspense>
           }
         />
+        <Route
+          path="/optiscan"
+          element={
+            <Suspense fallback={<LoadingSpinner size="lg" />}>
+              <Optiscan />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/ag"
+          element={
+            <Suspense fallback={<LoadingSpinner size="lg" />}>
+              <AG />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/lifetrack"
+          element={
+            <Suspense fallback={<LoadingSpinner size="lg" />}>
+              <LifeTrack />
+            </Suspense>
+          }
+        />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { seededRandomRange } from '../utils/math';
 import { useScrollTriggerCleanup } from './useScrollTriggerCleanup';
 
@@ -20,6 +19,7 @@ interface UseLetterExplosionOptions {
   maxRotation?: number;
   minScale?: number;
   maxScale?: number;
+  disabled?: boolean;
 }
 
 /**
@@ -33,13 +33,17 @@ export const useLetterExplosion = ({
   yRange = 300,
   maxRotation = 180,
   minScale = 0.5,
-  maxScale = 1.5
+  maxScale = 1.5,
+  disabled = false
 }: UseLetterExplosionOptions = {}) => {
   const randomValuesRef = useRef<RandomValues[] | null>(null);
   const { registerInstance } = useScrollTriggerCleanup();
 
   useEffect(() => {
+    if (disabled) return;
     if (!containerRef?.current) return;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const container = containerRef.current;
     const charElements = container.querySelectorAll(charSelector);
@@ -56,6 +60,10 @@ export const useLetterExplosion = ({
       }));
     }
 
+    // Guard: ensure the trigger element exists before creating ScrollTrigger
+    const triggerEl = document.querySelector(triggerSelector);
+    if (!triggerEl) return;
+
     // Set initial states
     gsap.set(charElements, {
       opacity: 1,
@@ -65,39 +73,44 @@ export const useLetterExplosion = ({
       rotation: 0
     });
 
-    // Create scroll-triggered animation
-    gsap.to(charElements, {
+    // Split letters into groups (first name, space, last name)
+    const letters = Array.from(charElements) as Element[];
+    const firstSpace = letters.findIndex(el => el.textContent === ' ');
+    const splitAt = firstSpace >= 0 ? firstSpace : letters.length;
+
+    // Staggered timeline: first name group starts, last name group follows
+    const tl = gsap.timeline({
       scrollTrigger: {
         trigger: triggerSelector,
         start: 'top top',
         end: 'center top',
-        scrub: 1,
-        onUpdate: (self) => {
-          const progress = self.progress;
-          charElements.forEach((el, index) => {
-            const rand = randomValuesRef.current?.[index];
-            if (rand) {
-              gsap.set(el as Element, {
-                x: rand.x * progress,
-                y: rand.y * progress,
-                rotation: rand.rotation * progress,
-                scale: 1 - (1 - rand.scale) * progress,
-                opacity: 1 - progress * 0.9
-              });
-            }
-          });
-        }
+        scrub: 1.5,
       }
     });
 
-    // Register the ScrollTrigger instance for cleanup
-    const scrollTrigger = ScrollTrigger.getAll().find(
-      st => st.vars.trigger === triggerSelector
-    );
-    if (scrollTrigger) {
-      registerInstance(scrollTrigger);
+    if (tl.scrollTrigger) {
+      registerInstance(tl.scrollTrigger);
     }
-    // Cleanup handled by useScrollTriggerCleanup hook
+
+    tl.to(letters.slice(0, splitAt), {
+      x: () => seededRandomRange(Math.random() * 1000, -300, 300),
+      y: () => seededRandomRange(Math.random() * 1000, -200, 200),
+      rotation: () => seededRandomRange(Math.random() * 1000, -120, 120),
+      scale: 0.6,
+      opacity: 0.1,
+      duration: 1,
+      ease: 'power3.out',
+    }, 0);
+
+    tl.to(letters.slice(splitAt), {
+      x: () => seededRandomRange(Math.random() * 1000, -300, 300),
+      y: () => seededRandomRange(Math.random() * 1000, -200, 200),
+      rotation: () => seededRandomRange(Math.random() * 1000, -120, 120),
+      scale: 0.6,
+      opacity: 0.1,
+      duration: 1,
+      ease: 'power3.out',
+    }, 0.15);
   }, [containerRef, triggerSelector, charSelector, xRange, yRange, maxRotation, minScale, maxScale]);
 };
 
