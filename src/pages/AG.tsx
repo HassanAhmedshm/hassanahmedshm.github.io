@@ -35,12 +35,16 @@ function Navigation() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const links = [
-    { label: 'Features', href: '#features' },
-    { label: 'How it Works', href: '#how-it-works' },
-    { label: 'Providers', href: '#providers' },
-    { label: 'Security', href: '#security' },
-    { label: 'Beta', href: '#beta' },
+    { label: 'Features', id: 'features' },
+    { label: 'How it Works', id: 'how-it-works' },
+    { label: 'Providers', id: 'providers' },
+    { label: 'Security', id: 'security' },
+    { label: 'Beta', id: 'beta' },
   ]
+
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0A0A0A]/90 backdrop-blur-md border-b border-[#2A2A2A]">
@@ -55,8 +59,9 @@ function Navigation() {
           <div className="hidden md:flex items-center gap-8">
             {links.map((l) => (
               <a
-                key={l.href}
-                href={l.href}
+                key={l.id}
+                href={`#${l.id}`}
+                onClick={(e) => { e.preventDefault(); scrollTo(l.id) }}
                 className="text-sm text-[#9E9E9E] hover:text-[#F5F5F5] transition-colors font-normal"
               >
                 {l.label}
@@ -70,14 +75,14 @@ function Navigation() {
               href="#/"
               className="text-sm text-[#9E9E9E] hover:text-[#F5F5F5] transition-colors font-normal"
             >
-              Portfolio
+              Back to portfolio
             </a>
-            <a
-              href="#beta"
+            <button
+              onClick={() => scrollTo('beta')}
               className="bg-[#FFFFFF] text-[#000000] hover:bg-[#E0E0E0] transition-colors text-sm font-normal px-4 py-1.5 rounded-md"
             >
               Apply for Beta
-            </a>
+            </button>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="md:hidden text-[#9E9E9E] hover:text-[#F5F5F5] transition-colors"
@@ -94,14 +99,13 @@ function Navigation() {
         <div className="md:hidden border-t border-[#2A2A2A] bg-[#0A0A0A]">
           <div className="px-4 py-4 flex flex-col gap-3">
             {links.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                onClick={() => setMobileOpen(false)}
-                className="text-sm text-[#9E9E9E] hover:text-[#F5F5F5] transition-colors font-normal py-1"
+              <button
+                key={l.id}
+                onClick={() => { scrollTo(l.id); setMobileOpen(false) }}
+                className="block w-full text-left text-sm text-[#9E9E9E] hover:text-[#F5F5F5] transition-colors font-normal py-1"
               >
                 {l.label}
-              </a>
+              </button>
             ))}
           </div>
         </div>
