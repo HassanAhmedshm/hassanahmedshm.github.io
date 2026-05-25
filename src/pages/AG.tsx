@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import {
   Eye,
   MousePointerClick,
@@ -23,6 +25,8 @@ import {
   Mail,
   ArrowRight,
 } from 'lucide-react'
+
+gsap.registerPlugin(ScrollTrigger)
 
 /* ────────────────────────────────────────────
    NAV
@@ -62,6 +66,12 @@ function Navigation() {
 
           {/* CTA + mobile toggle */}
           <div className="flex items-center gap-3">
+            <a
+              href="#/"
+              className="text-sm text-[#9E9E9E] hover:text-[#F5F5F5] transition-colors font-normal"
+            >
+              Portfolio
+            </a>
             <a
               href="#beta"
               className="bg-[#FFFFFF] text-[#000000] hover:bg-[#E0E0E0] transition-colors text-sm font-normal px-4 py-1.5 rounded-md"
@@ -104,29 +114,43 @@ function Navigation() {
    HERO
    ──────────────────────────────────────────── */
 function HeroSection() {
+  const sectionRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ scrollTrigger: { trigger: sectionRef.current, start: 'top 60%', toggleActions: 'play none none none' } })
+      tl.from('.hero-badge', { opacity: 0, y: 24, duration: 0.5, ease: 'power2.out' })
+        .from('.hero-title', { opacity: 0, y: 24, duration: 0.5, ease: 'power2.out' }, '-=0.35')
+        .from('.hero-desc', { opacity: 0, y: 24, duration: 0.5, ease: 'power2.out' }, '-=0.35')
+        .from('.hero-actions', { opacity: 0, y: 24, duration: 0.5, ease: 'power2.out' }, '-=0.35')
+        .from('.hero-mockup', { opacity: 0, y: 30, duration: 0.6, ease: 'power2.out' }, '-=0.25')
+    }, sectionRef)
+    return () => ctx.revert()
+  }, [])
+
   return (
-    <section className="pt-28 pb-20 px-4 sm:px-6 lg:px-8">
+    <section ref={sectionRef} className="pt-28 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 border border-[#404040] bg-[#222222] rounded-md px-3 py-1 mb-6">
+          <div className="hero-badge inline-flex items-center gap-2 border border-[#404040] bg-[#222222] rounded-md px-3 py-1 mb-6">
             <Zap size={14} className="text-[#9E9E9E]" />
             <span className="text-xs text-[#9E9E9E] font-normal uppercase tracking-wider">
-              Closed Beta
+              In Active Development
             </span>
           </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl text-[#F5F5F5] font-semibold leading-tight tracking-tight">
+          <h1 className="hero-title text-4xl sm:text-5xl lg:text-6xl text-[#F5F5F5] font-semibold leading-tight tracking-tight">
             AG controls your PC.
             <br />
             You stay in control.
           </h1>
-          <p className="mt-6 text-lg text-[#9E9E9E] font-normal leading-relaxed max-w-2xl mx-auto">
+          <p className="hero-desc mt-6 text-lg text-[#9E9E9E] font-normal leading-relaxed max-w-2xl mx-auto">
             AG sees your screen, understands context, and acts on your behalf.
             Automate tasks, write code, and focus on what matters. Powered by
-            Groq and completely local. Currently in closed beta.
+            Groq and completely local. Currently in active development.
           </p>
 
           {/* Actions */}
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="hero-actions mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href="#beta"
               className="bg-[#FFFFFF] text-[#000000] hover:bg-[#E0E0E0] transition-colors text-sm font-normal px-6 py-2.5 rounded-md inline-flex items-center gap-2"
@@ -134,17 +158,11 @@ function HeroSection() {
               Apply for Beta
               <ChevronRight size={16} />
             </a>
-            <a
-              href="#docs"
-              className="bg-[#121212] border border-[#404040] text-[#F5F5F5] hover:bg-[#1A1A1A] hover:border-[#666666] transition-colors text-sm font-normal px-6 py-2.5 rounded-md inline-flex items-center gap-2"
-            >
-              View Documentation
-            </a>
           </div>
         </div>
 
         {/* Simple Mode UI Mockup */}
-        <div className="mt-16 max-w-2xl mx-auto">
+        <div className="hero-mockup mt-16 max-w-2xl mx-auto">
           <div className="border border-[#404040] bg-[#121212] rounded-md overflow-hidden">
             {/* Top bar */}
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#2A2A2A]">
@@ -196,20 +214,33 @@ function HeroSection() {
    YOLO MODE
    ──────────────────────────────────────────── */
 function YoloModeSection() {
+  const sectionRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ scrollTrigger: { trigger: sectionRef.current, start: 'top 60%', toggleActions: 'play none none none' } })
+      tl.from('.yolo-badge', { opacity: 0, y: 20, duration: 0.45, ease: 'power2.out' })
+        .from('.yolo-title', { opacity: 0, y: 20, duration: 0.45, ease: 'power2.out' }, '-=0.3')
+        .from('.yolo-desc', { opacity: 0, y: 20, duration: 0.45, ease: 'power2.out' }, '-=0.3')
+        .from('.yolo-visual > *', { opacity: 0, scale: 0.5, duration: 0.25, stagger: 0.04, ease: 'back.out(1.7)' }, '-=0.2')
+    }, sectionRef)
+    return () => ctx.revert()
+  }, [])
+
   return (
-    <section className="bg-[#1A1A1A] border-y border-[#2A2A2A] py-16 px-4 sm:px-6 lg:px-8">
+    <section ref={sectionRef} className="bg-[#1A1A1A] border-y border-[#2A2A2A] py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 border border-[#404040] bg-[#222222] rounded-md px-3 py-1 mb-6">
+          <div className="yolo-badge inline-flex items-center gap-2 border border-[#404040] bg-[#222222] rounded-md px-3 py-1 mb-6">
             <Zap size={14} className="text-[#9E9E9E]" />
             <span className="text-xs text-[#9E9E9E] font-normal uppercase tracking-wider">
               YOLO Mode
             </span>
           </div>
-          <h2 className="text-3xl sm:text-4xl text-[#F5F5F5] font-semibold tracking-tight">
+          <h2 className="yolo-title text-3xl sm:text-4xl text-[#F5F5F5] font-semibold tracking-tight">
             It doesn&apos;t stop until it&apos;s done.
           </h2>
-          <p className="mt-4 text-[#9E9E9E] font-normal leading-relaxed max-w-xl mx-auto">
+          <p className="yolo-desc mt-4 text-[#9E9E9E] font-normal leading-relaxed max-w-xl mx-auto">
             When YOLO Mode is active, AG will retry up to{' '}
             <span className="text-[#F5F5F5] font-normal">50 times</span> to
             accomplish any task without throwing a generic error. It adapts,
@@ -217,7 +248,7 @@ function YoloModeSection() {
           </p>
 
           {/* Retry visualization */}
-          <div className="mt-10 flex items-center justify-center gap-1 flex-wrap">
+          <div className="yolo-visual mt-10 flex items-center justify-center gap-1 flex-wrap">
             {Array.from({ length: 12 }).map((_, i) => (
               <div
                 key={i}
@@ -299,10 +330,21 @@ const capabilities = [
 ]
 
 function CapabilitiesSection() {
+  const sectionRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ scrollTrigger: { trigger: sectionRef.current, start: 'top 60%', toggleActions: 'play none none none' } })
+      tl.from('.caps-header', { opacity: 0, y: 24, duration: 0.45, ease: 'power2.out' })
+        .from('.capability-card', { opacity: 0, y: 24, duration: 0.45, stagger: 0.08, ease: 'power2.out' }, '-=0.2')
+    }, sectionRef)
+    return () => ctx.revert()
+  }, [])
+
   return (
-    <section id="features" className="py-20 px-4 sm:px-6 lg:px-8">
+    <section ref={sectionRef} id="features" className="py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-14">
+        <div className="caps-header text-center mb-14">
           <h2 className="text-3xl sm:text-4xl text-[#F5F5F5] font-semibold tracking-tight">
             Core Capabilities
           </h2>
@@ -317,7 +359,7 @@ function CapabilitiesSection() {
             return (
               <div
                 key={cap.title}
-                className="bg-[#121212] border border-[#2A2A2A] rounded-md p-6 hover:border-[#404040] transition-colors"
+                className="capability-card bg-[#121212] border border-[#2A2A2A] rounded-md p-6 hover:border-[#404040] transition-colors"
               >
                 <Icon size={22} className="text-[#9E9E9E] mb-4" />
                 <h3 className="text-[#F5F5F5] font-semibold text-base mb-2">
@@ -339,10 +381,22 @@ function CapabilitiesSection() {
    UI TAILORED FOR EVERYONE
    ──────────────────────────────────────────── */
 function UITailoredSection() {
+  const sectionRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ scrollTrigger: { trigger: sectionRef.current, start: 'top 60%', toggleActions: 'play none none none' } })
+      tl.from('.ui-header', { opacity: 0, y: 24, duration: 0.45, ease: 'power2.out' })
+        .from('.ui-simple', { opacity: 0, x: -30, duration: 0.5, ease: 'power2.out' }, '-=0.2')
+        .from('.ui-complex', { opacity: 0, x: 30, duration: 0.5, ease: 'power2.out' }, '<0')
+    }, sectionRef)
+    return () => ctx.revert()
+  }, [])
+
   return (
-    <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-[#2A2A2A]">
+    <section ref={sectionRef} id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-[#2A2A2A]">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-14">
+        <div className="ui-header text-center mb-14">
           <h2 className="text-3xl sm:text-4xl text-[#F5F5F5] font-semibold tracking-tight">
             UI Tailored for Everyone
           </h2>
@@ -353,7 +407,7 @@ function UITailoredSection() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Simple Mode */}
-          <div className="bg-[#121212] border border-[#2A2A2A] rounded-md overflow-hidden">
+          <div className="ui-simple bg-[#121212] border border-[#2A2A2A] rounded-md overflow-hidden">
             <div className="px-6 py-4 border-b border-[#2A2A2A]">
               <h3 className="text-[#F5F5F5] font-semibold text-base">
                 Simple Mode
@@ -410,7 +464,7 @@ function UITailoredSection() {
           </div>
 
           {/* Complex Mode */}
-          <div className="bg-[#121212] border border-[#2A2A2A] rounded-md overflow-hidden">
+          <div className="ui-complex bg-[#121212] border border-[#2A2A2A] rounded-md overflow-hidden">
             <div className="px-6 py-4 border-b border-[#2A2A2A]">
               <h3 className="text-[#F5F5F5] font-semibold text-base">
                 Complex Mode
@@ -517,10 +571,22 @@ const providers = [
 ]
 
 function ProvidersSection() {
+  const sectionRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ scrollTrigger: { trigger: sectionRef.current, start: 'top 60%', toggleActions: 'play none none none' } })
+      tl.from('.providers-header', { opacity: 0, y: 24, duration: 0.45, ease: 'power2.out' })
+        .from('.provider-badge', { opacity: 0, y: 16, scale: 0.95, duration: 0.35, stagger: 0.05, ease: 'power2.out' }, '-=0.2')
+        .from('.providers-sub', { opacity: 0, y: 16, duration: 0.4, ease: 'power2.out' }, '-=0.15')
+    }, sectionRef)
+    return () => ctx.revert()
+  }, [])
+
   return (
-    <section id="providers" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-[#2A2A2A]">
+    <section ref={sectionRef} id="providers" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-[#2A2A2A]">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-14">
+        <div className="providers-header text-center mb-14">
           <h2 className="text-3xl sm:text-4xl text-[#F5F5F5] font-semibold tracking-tight">
             Model Agnostic
           </h2>
@@ -533,7 +599,7 @@ function ProvidersSection() {
           {providers.map((p) => (
             <div
               key={p.name}
-              className={`bg-[#121212] border rounded-md px-5 py-3 flex items-center gap-2 ${
+              className={`provider-badge bg-[#121212] border rounded-md px-5 py-3 flex items-center gap-2 ${
                 p.primary ? 'border-[#404040]' : 'border-[#2A2A2A]'
               }`}
             >
@@ -553,7 +619,7 @@ function ProvidersSection() {
           ))}
         </div>
 
-        <p className="mt-8 text-center text-[#666666] font-normal text-sm">
+        <p className="providers-sub mt-8 text-center text-[#666666] font-normal text-sm mx-auto max-w-md">
           Bring your own API key. 100% Local Privacy.
         </p>
       </div>
@@ -565,43 +631,64 @@ function ProvidersSection() {
    SECURITY
    ──────────────────────────────────────────── */
 function SecuritySection() {
+  const sectionRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ scrollTrigger: { trigger: sectionRef.current, start: 'top 60%', toggleActions: 'play none none none' } })
+      tl.from('.security-icon', { opacity: 0, y: 20, duration: 0.4, ease: 'power2.out' })
+        .from('.security-title', { opacity: 0, y: 20, duration: 0.4, ease: 'power2.out' }, '-=0.25')
+        .from('.security-desc', { opacity: 0, y: 20, duration: 0.4, ease: 'power2.out' }, '-=0.25')
+        .from('.security-card', { opacity: 0, y: 20, duration: 0.45, stagger: 0.08, ease: 'power2.out' }, '-=0.2')
+    }, sectionRef)
+    return () => ctx.revert()
+  }, [])
+
   return (
-    <section id="security" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-[#2A2A2A]">
+    <section ref={sectionRef} id="security" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-[#2A2A2A]">
       <div className="max-w-7xl mx-auto">
         <div className="max-w-3xl mx-auto text-center">
-          <Shield size={28} className="text-[#9E9E9E] mx-auto mb-6" />
-          <h2 className="text-3xl sm:text-4xl text-[#F5F5F5] font-semibold tracking-tight">
+          <div className="security-icon">
+            <Shield size={28} className="text-[#9E9E9E] mx-auto mb-6" />
+          </div>
+          <h2 className="security-title text-3xl sm:text-4xl text-[#F5F5F5] font-semibold tracking-tight">
             Your Data, Your Machine
           </h2>
-          <p className="mt-4 text-[#9E9E9E] font-normal leading-relaxed max-w-xl mx-auto">
+          <p className="security-desc mt-4 text-[#9E9E9E] font-normal leading-relaxed max-w-xl mx-auto">
             All data is stored locally on your device. AG never sends your
             personal data to external servers. You maintain complete ownership
             and control over every interaction, every memory, every keystroke.
           </p>
           <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-[#121212] border border-[#2A2A2A] rounded-md p-5">
-              <RotateCcw size={18} className="text-[#9E9E9E] mb-3" />
-              <h3 className="text-[#F5F5F5] font-semibold text-sm mb-1">
-                Local Storage
-              </h3>
+            <div className="security-card bg-[#121212] border border-[#2A2A2A] rounded-md p-5 flex flex-col items-center text-center">
+              <div className="flex items-center gap-3 mb-3">
+                <RotateCcw size={20} className="text-[#9E9E9E] shrink-0" />
+                <h3 className="text-[#F5F5F5] font-semibold text-sm">
+                  Local Storage
+                </h3>
+              </div>
               <p className="text-[#9E9E9E] font-normal text-xs leading-relaxed">
                 All memories and preferences stay on your machine.
               </p>
             </div>
-            <div className="bg-[#121212] border border-[#2A2A2A] rounded-md p-5">
-              <Shield size={18} className="text-[#9E9E9E] mb-3" />
-              <h3 className="text-[#F5F5F5] font-semibold text-sm mb-1">
-                User Supervision
-              </h3>
+            <div className="security-card bg-[#121212] border border-[#2A2A2A] rounded-md p-5 flex flex-col items-center text-center">
+              <div className="flex items-center gap-3 mb-3">
+                <Shield size={20} className="text-[#9E9E9E] shrink-0" />
+                <h3 className="text-[#F5F5F5] font-semibold text-sm">
+                  User Supervision
+                </h3>
+              </div>
               <p className="text-[#9E9E9E] font-normal text-xs leading-relaxed">
                 Every action is visible. You approve what matters.
               </p>
             </div>
-            <div className="bg-[#121212] border border-[#2A2A2A] rounded-md p-5">
-              <Eye size={18} className="text-[#9E9E9E] mb-3" />
-              <h3 className="text-[#F5F5F5] font-semibold text-sm mb-1">
-                Full Transparency
-              </h3>
+            <div className="security-card bg-[#121212] border border-[#2A2A2A] rounded-md p-5 flex flex-col items-center text-center">
+              <div className="flex items-center gap-3 mb-3">
+                <Eye size={20} className="text-[#9E9E9E] shrink-0" />
+                <h3 className="text-[#F5F5F5] font-semibold text-sm">
+                  Full Transparency
+                </h3>
+              </div>
               <p className="text-[#9E9E9E] font-normal text-xs leading-relaxed">
                 See exactly what AG sees, thinks, and does at all times.
               </p>
@@ -617,23 +704,40 @@ function SecuritySection() {
    BETA CTA
    ──────────────────────────────────────────── */
 function BetaSection() {
+  const sectionRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ scrollTrigger: { trigger: sectionRef.current, start: 'top 60%', toggleActions: 'play none none none' } })
+      tl.from('.beta-icon', { opacity: 0, y: 20, duration: 0.4, ease: 'power2.out' })
+        .from('.beta-title', { opacity: 0, y: 20, duration: 0.4, ease: 'power2.out' }, '-=0.25')
+        .from('.beta-desc', { opacity: 0, y: 20, duration: 0.4, ease: 'power2.out' }, '-=0.25')
+        .from('.beta-step', { opacity: 0, y: 20, duration: 0.45, stagger: 0.08, ease: 'power2.out' }, '-=0.2')
+        .from('.beta-cta', { opacity: 0, y: 20, duration: 0.4, ease: 'power2.out' }, '-=0.15')
+        .from('.beta-note', { opacity: 0, y: 20, duration: 0.4, ease: 'power2.out' }, '-=0.25')
+    }, sectionRef)
+    return () => ctx.revert()
+  }, [])
+
   const email = 'hassanahmedshm@gmail.com'
   const subject = encodeURIComponent('AG Beta Program — Enrollment Request')
   const body = encodeURIComponent(
-    `Hello AG Team,\n\nI'd like to enroll in the AG Beta Program.\n\nAbout me:\n- Name:\n- Occupation/Role:\n- Operating System:\n\nHow I plan to use AG:\n\n\nWhy I'm interested in AG:\n\n\nI understand this is a closed beta and I will be contacted after review.\n\nThank you.`
+    `Hello AG Team,\n\nI'd like to enroll in the AG Beta Program.\n\nAbout me:\n- Name:\n- Occupation/Role:\n- Operating System:\n\nHow I plan to use AG:\n\n\nWhy I'm interested in AG:\n\n\nThank you.`
   )
   const mailto = `mailto:${email}?subject=${subject}&body=${body}`
 
   return (
-    <section id="beta" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-[#2A2A2A]">
+    <section ref={sectionRef} id="beta" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-[#2A2A2A]">
       <div className="max-w-7xl mx-auto">
         <div className="max-w-2xl mx-auto text-center">
-          <Mail size={28} className="text-[#9E9E9E] mx-auto mb-6" />
-          <h2 className="text-3xl sm:text-4xl text-[#F5F5F5] font-semibold tracking-tight">
-            Join the Closed Beta
+          <div className="beta-icon">
+            <Mail size={28} className="text-[#9E9E9E] mx-auto mb-6" />
+          </div>
+          <h2 className="beta-title text-3xl sm:text-4xl text-[#F5F5F5] font-semibold tracking-tight">
+            Join the Beta
           </h2>
-          <p className="mt-4 text-[#9E9E9E] font-normal leading-relaxed max-w-xl mx-auto">
-            AG is currently in closed beta. To request access, send us an email
+          <p className="beta-desc mt-4 text-[#9E9E9E] font-normal leading-relaxed max-w-xl mx-auto">
+            AG is currently in active development. To request early access, send us an email
             with information about yourself, how you plan to use AG, and why
             you&apos;re interested. We review every application and will get
             back to you.
@@ -641,7 +745,7 @@ function BetaSection() {
 
           {/* Steps */}
           <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
-            <div className="bg-[#121212] border border-[#2A2A2A] rounded-md p-5">
+            <div className="beta-step bg-[#121212] border border-[#2A2A2A] rounded-md p-5">
               <div className="w-7 h-7 rounded bg-[#1A1A1A] border border-[#2A2A2A] flex items-center justify-center mb-3">
                 <span className="text-xs text-[#9E9E9E] font-normal">1</span>
               </div>
@@ -653,7 +757,7 @@ function BetaSection() {
                 pre-filled template.
               </p>
             </div>
-            <div className="bg-[#121212] border border-[#2A2A2A] rounded-md p-5">
+            <div className="beta-step bg-[#121212] border border-[#2A2A2A] rounded-md p-5">
               <div className="w-7 h-7 rounded bg-[#1A1A1A] border border-[#2A2A2A] flex items-center justify-center mb-3">
                 <span className="text-xs text-[#9E9E9E] font-normal">2</span>
               </div>
@@ -665,7 +769,7 @@ function BetaSection() {
                 The more detail, the better.
               </p>
             </div>
-            <div className="bg-[#121212] border border-[#2A2A2A] rounded-md p-5">
+            <div className="beta-step bg-[#121212] border border-[#2A2A2A] rounded-md p-5">
               <div className="w-7 h-7 rounded bg-[#1A1A1A] border border-[#2A2A2A] flex items-center justify-center mb-3">
                 <span className="text-xs text-[#9E9E9E] font-normal">3</span>
               </div>
@@ -680,7 +784,7 @@ function BetaSection() {
           </div>
 
           {/* CTA */}
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="beta-cta mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href={mailto}
               className="bg-[#FFFFFF] text-[#000000] hover:bg-[#E0E0E0] transition-colors text-sm font-normal px-6 py-2.5 rounded-md inline-flex items-center gap-2"
@@ -697,7 +801,7 @@ function BetaSection() {
             </a>
           </div>
 
-          <p className="mt-6 text-[#666666] font-normal text-xs">
+          <p className="beta-note mt-6 text-center text-[#666666] font-normal text-xs mx-auto max-w-md">
             All applications are reviewed manually. You will receive a response
             via email after review.
           </p>
@@ -714,39 +818,11 @@ function Footer() {
   return (
     <footer className="border-t border-[#2A2A2A] py-8 px-4 sm:px-6 lg:px-8 mt-auto">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-6">
-            <span className="text-[#F5F5F5] font-semibold text-sm">AG</span>
-            <span className="text-[#666666] font-normal text-xs">
-              &copy; {new Date().getFullYear()} AG. All rights reserved.
-            </span>
-          </div>
-          <div className="flex items-center gap-6">
-            <a
-              href="#"
-              className="text-xs text-[#9E9E9E] hover:text-[#F5F5F5] transition-colors font-normal"
-            >
-              Privacy
-            </a>
-            <a
-              href="#"
-              className="text-xs text-[#9E9E9E] hover:text-[#F5F5F5] transition-colors font-normal"
-            >
-              Terms
-            </a>
-            <a
-              href="#"
-              className="text-xs text-[#9E9E9E] hover:text-[#F5F5F5] transition-colors font-normal"
-            >
-              Documentation
-            </a>
-            <a
-              href="#"
-              className="text-xs text-[#9E9E9E] hover:text-[#F5F5F5] transition-colors font-normal"
-            >
-              GitHub
-            </a>
-          </div>
+        <div className="flex items-center justify-center gap-6">
+          <span className="text-[#F5F5F5] font-semibold text-sm">AG</span>
+          <span className="text-[#666666] font-normal text-xs">
+            &copy; {new Date().getFullYear()} AG. All rights reserved.
+          </span>
         </div>
       </div>
     </footer>
