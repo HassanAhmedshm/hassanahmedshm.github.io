@@ -29,10 +29,12 @@
 /* Center decorative line - starts as a dot, expands vertically */
 .about-line {
   position: relative;
-  width: 2px;
+  width: 3px;
   height: 80vh;
-  background: var(--gradient-primary);
-  transform-origin: center center;
+  background: linear-gradient(to bottom, var(--accent-blue), var(--accent-amber));
+  border-radius: 2px;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.35), 0 0 24px rgba(255, 122, 0, 0.2);
+  transform-origin: top center;
   align-self: center;
   justify-self: center;
   z-index: 2;

@@ -221,7 +221,26 @@ const Projects = ({ reducedMotion = false }: ProjectsProps) => {
     let animationFrameId: number;
     let currentXPosition = 0;
 
-    const moveDistance = window.innerWidth * 2;
+    // Travel distance for the horizontal card scroll, measured from the actual
+    // on-screen position of the last card so card 4 ends up centered at
+    // progress = 1 regardless of card widths/gaps. Measured after one frame so
+    // the 3D perspective transforms are already applied.
+    let moveDistance = 0;
+    const measureMoveDistance = () => {
+      const cards = Array.from(
+        cardsContainerRef.current!.querySelectorAll('.showcase-card'),
+      );
+      const last = cards[cards.length - 1];
+      gsap.set(cardsContainerRef.current, { x: 0 });
+      // Neutralize the per-card 3D transform so we measure the true layout
+      // center (otherwise the perspective shift throws off the travel math).
+      const prevTransform = last.style.transform;
+      last.style.transform = 'none';
+      const r = last.getBoundingClientRect();
+      last.style.transform = prevTransform;
+      moveDistance = r.left + r.width / 2 - window.innerWidth / 2;
+    };
+    requestAnimationFrame(measureMoveDistance);
 
     // 1. Grid Canvas Setup
     const gridCtx = gridCanvasRef.current.getContext("2d")!;
@@ -277,6 +296,11 @@ const Projects = ({ reducedMotion = false }: ProjectsProps) => {
       1000,
     );
     lettersCamera.position.z = 20;
+    // Critical: update the camera's world matrix before projecting letter
+    // points. Without this, matrixWorldInverse stays identity (camera at the
+    // origin), so points at z=0 project to Infinity and every letter position
+    // becomes NaN — the letters then collapse to the top-left corner.
+    lettersCamera.updateMatrixWorld(true);
 
     const lettersRenderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -295,7 +319,7 @@ const Projects = ({ reducedMotion = false }: ProjectsProps) => {
           new THREE.Vector3(
             -25 + 50 * t,
             yPos + Math.sin(t * Math.PI) * -amplitude,
-            0,
+            (1 - Math.pow(Math.abs(t - 0.5) * 2, 2)) * -5,
           ),
         );
       }
@@ -334,8 +358,8 @@ const Projects = ({ reducedMotion = false }: ProjectsProps) => {
     const letters = ["W", "O", "R", "K"];
     const letterPositions = new Map();
 
-    // Cap letter count based on device capabilities
-    const lettersPerLine = Math.min(15, Math.max(4, Math.floor(recommendedParticleCount / 25)));
+    // 15 letters per row, matching the reference marquee density
+    const lettersPerLine = 15;
 
     textContainerRef.current.innerHTML = "";
 
@@ -347,7 +371,7 @@ const Projects = ({ reducedMotion = false }: ProjectsProps) => {
         el.textContent = letters[i];
 
         // Calculate initial position immediately based on the path
-        let tRaw = (j / 14) % 1;
+        let tRaw = (j / (lettersPerLine - 1)) % 1;
         const point = line.curve.getPoint(tRaw);
         const vector = point.clone().project(lettersCamera);
         const initialX = (-vector.x * 0.5 + 0.5) * window.innerWidth;
@@ -411,19 +435,19 @@ const Projects = ({ reducedMotion = false }: ProjectsProps) => {
       }
     });
 
-    // Main scroll trigger
+    // Main scroll trigger. pin:true holds the section in place while the
+    // user scrolls vertically, so the cards scroll horizontally through the
+    // pinned viewport. Without the pin the section just flies past and the
+    // cards never travel.
     const st = ScrollTrigger.create({
       trigger: sectionRef.current,
       start: "top top",
-      end: "+=400%",
+      end: "+=2200",
+      pin: true,
       scrub: 1,
       onEnter: () => {
-        // Fade in letters when section enters
-        gsap.fromTo(
-          textContainerRef.current,
-          { opacity: 0 },
-          { opacity: 1, duration: 0.5, ease: "power2.out" }
-        );
+        // Letters are visible by default (see .text-container opacity:1);
+        // nothing to fade in here.
       },
       onUpdate: (self) => {
         updateTargetPositions(self.progress);
@@ -521,6 +545,7 @@ const Projects = ({ reducedMotion = false }: ProjectsProps) => {
       lettersCamera.updateProjectionMatrix();
       lettersRenderer.setSize(window.innerWidth, window.innerHeight);
       updateTargetPositions(progress);
+      measureMoveDistance();
     };
     window.addEventListener("resize", handleResize);
 

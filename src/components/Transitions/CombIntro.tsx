@@ -7,10 +7,16 @@ interface CombIntroProps {
 
 const CombIntro = ({ onComplete }: CombIntroProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  // Keep the latest onComplete without retriggering the GSAP timeline.
+  const onCompleteRef = useRef(onComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     const tl = gsap.timeline({
-      onComplete: () => onComplete?.()
+      onComplete: () => onCompleteRef.current?.()
     });
 
     tl.to(containerRef.current, {
@@ -21,7 +27,7 @@ const CombIntro = ({ onComplete }: CombIntroProps) => {
     });
 
     return () => { tl.kill(); };
-  }, [onComplete]);
+  }, []);
 
   return (
     <div ref={containerRef} className="comb-intro">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
@@ -107,8 +107,8 @@ function Portfolio() {
     };
   }, [reducedMotion]);
   
-  // Handle loading complete
-  const handleLoadingComplete = () => {
+  // Handle loading complete — stable identity so child effects don't restart on every App render
+  const handleLoadingComplete = useCallback(() => {
     setIsLoading(false);
 
     try {
@@ -119,7 +119,7 @@ function Portfolio() {
     setTimeout(() => {
       ScrollTrigger.refresh();
     }, 120);
-  };
+  }, []);
 
   const introSeen = (() => {
     try {

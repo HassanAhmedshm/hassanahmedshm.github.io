@@ -44,7 +44,7 @@ const About = ({ reducedMotion = false }: AboutProps) => {
     const mm = gsap.matchMedia();
 
     mm.add('(min-width: 768px)', () => {
-      gsap.set(line, { scaleY: 0, transformOrigin: 'center center' });
+      gsap.set(line, { scaleY: 0, transformOrigin: 'top center' });
       gsap.set(image, { x: -100, opacity: 0 });
       gsap.set(text, { x: 100, opacity: 0 });
 
@@ -81,7 +81,7 @@ const About = ({ reducedMotion = false }: AboutProps) => {
     });
 
     mm.add('(max-width: 767px)', () => {
-      gsap.set(line, { scaleY: 0, transformOrigin: 'center center' });
+      gsap.set(line, { scaleY: 0, transformOrigin: 'top center' });
       gsap.set(image, { x: 72, y: 0, opacity: 0 });
       gsap.set(text, { x: -72, y: 0, opacity: 0 });
 

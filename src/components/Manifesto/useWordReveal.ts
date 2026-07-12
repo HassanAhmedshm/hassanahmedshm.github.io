@@ -48,13 +48,16 @@ export const useWordReveal = ({ sectionRef, words, scrollDistance = 3000, disabl
         return;
       }
 
-      // Create timeline with scrollTrigger
+      // Create timeline with scrollTrigger. pin:true holds the section in view
+      // for the full scrollDistance so the user can scrub through the words.
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
           scrub: 0.5,
-          start: 'top bottom',
+          start: 'top top',
           end: `+=${scrollDistance}`,
+          pin: true,
+          pinSpacing: true,
         }
       });
 

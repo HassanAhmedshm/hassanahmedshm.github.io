@@ -199,23 +199,47 @@ const Navbar = ({ contentRef }: NavbarProps) => {
 
   useEffect(() => {
     const triggers: ScrollTrigger[] = [];
+    let raf = 0;
+    let mounted = true;
 
-    sections.forEach(({ id }) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-
-      const trigger = ScrollTrigger.create({
-        trigger: el,
-        start: "top center",
-        end: "bottom center",
-        onEnter: () => setActiveSection(id),
-        onEnterBack: () => setActiveSection(id),
+    // The four lazy-loaded sections (Hero/About/Manifesto/Projects) aren't in
+    // the DOM on the first commit. Keep retrying via rAF until every section
+    // is mounted, then wire the triggers. Without this only Contact's trigger
+    // ever gets created and "Contact" ends up permanently highlighted.
+    const setup = () => {
+      if (!mounted) return;
+      const missing = sections.some(({ id }) => !document.getElementById(id));
+      if (missing) {
+        raf = requestAnimationFrame(setup);
+        return;
+      }
+      sections.forEach(({ id }) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        // When a section is pinned by another ScrollTrigger (e.g. Manifesto),
+        // GSAP wraps it in a `.pin-spacer`. Using the section as the trigger
+        // would lock its viewport top to 0 during the pin, so "top center"
+        // never fires. Use the pin-spacer (which still scrolls naturally) as
+        // the trigger instead.
+        const triggerEl = el.parentElement?.classList.contains('pin-spacer')
+          ? el.parentElement
+          : el;
+        const trigger = ScrollTrigger.create({
+          trigger: triggerEl,
+          start: 'top center',
+          end: 'bottom center',
+          onEnter: () => setActiveSection(id),
+          onEnterBack: () => setActiveSection(id),
+        });
+        triggers.push(trigger);
       });
+    };
 
-      triggers.push(trigger);
-    });
+    setup();
 
     return () => {
+      mounted = false;
+      if (raf) cancelAnimationFrame(raf);
       triggers.forEach((trigger) => trigger.kill());
     };
   }, [contentRef]);

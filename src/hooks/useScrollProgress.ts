@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useLenis } from './useLenis';
 
 /**
  * Hook to track scroll progress (0 to 1)
@@ -7,8 +6,6 @@ import { useLenis } from './useLenis';
  */
 export const useScrollProgress = (targetRef = null) => {
   const [progress, setProgress] = useState(0);
-  
-  useLenis();
 
   useEffect(() => {
     const handleScroll = () => {
