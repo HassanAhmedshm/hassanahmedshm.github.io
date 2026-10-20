@@ -1,0 +1,1 @@
+import{b as t}from"./vendor-react-Dd7-2Lsi.js";function n(){const r=t.useRef([]),u=t.useCallback(e=>{r.current.includes(e)||r.current.push(e)},[]);return t.useEffect(()=>()=>{r.current.forEach(e=>e.kill()),r.current=[]},[]),{registerInstance:u}}export{n as u};
