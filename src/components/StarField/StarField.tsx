@@ -78,14 +78,14 @@ const StarField = ({ density = 100, speed = 1, deferred = false }) => {
         // Draw simple circle
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(59, 130, 246, ${opacity})`;
+        ctx.fillStyle = `rgba(47, 128, 196, ${opacity})`;
         ctx.fill();
 
         // Small glow for larger stars only
         if (star.size > 1) {
           ctx.beginPath();
           ctx.arc(star.x, star.y, star.size * 1.5, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(59, 130, 246, ${opacity * 0.15})`;
+          ctx.fillStyle = `rgba(47, 128, 196, ${opacity * 0.15})`;
           ctx.fill();
         }
       });

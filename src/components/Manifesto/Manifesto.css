@@ -18,16 +18,9 @@
   margin-bottom: 0;
 }
 
+/* Top fade bar — hidden: it read as an attention-grabbing loading indicator. */
 .manifesto::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: clamp(4rem, 10vh, 8rem);
-  background: linear-gradient(to bottom, var(--bg-dark) 0%, transparent 100%);
-  pointer-events: none;
-  z-index: 1;
+  display: none;
 }
 
 /* When pinned by GSAP, ensure content stays centered */
@@ -46,7 +39,7 @@
   transform: translate(-50%, -50%);
   width: 60vw;
   height: 60vh;
-  background: radial-gradient(ellipse, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+  background: radial-gradient(ellipse, rgba(47, 128, 196, 0.08) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }

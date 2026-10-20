@@ -9,6 +9,8 @@
   overflow: hidden;
   cursor: pointer;
   outline: none;
+  /* Fills the free half of the arcade grid */
+  grid-column: 1 / -1;
   border: 1px solid rgba(139, 92, 246, 0.3);
   box-shadow: 0 0 20px rgba(139, 92, 246, 0.1);
   transition: background-color 0.15s, border-color 0.3s, box-shadow 0.3s;
@@ -24,6 +26,11 @@
   box-shadow: 0 0 30px rgba(139, 92, 246, 0.2);
 }
 
+.reaction-game:focus-visible {
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.45), 0 0 30px rgba(139, 92, 246, 0.25);
+}
+
 .reaction-content {
   display: flex;
   flex-direction: column;
@@ -33,15 +40,27 @@
 }
 
 .reaction-title {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  text-shadow: 0 0 10px currentColor;
+  font-family: var(--font-mono);
+  letter-spacing: -0.01em;
+  text-shadow: 0 0 12px currentColor;
   transition: color 0.15s;
 }
 
 .reaction-subtitle {
   font-size: 0.7rem;
   transition: color 0.15s;
+}
+
+/* Ready state gets an arcade-style pulse */
+.reaction-game--ready .reaction-title {
+  animation: reaction-pulse 0.65s ease-in-out infinite;
+}
+
+@keyframes reaction-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 .reaction-best {

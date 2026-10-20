@@ -34,12 +34,13 @@ src/
     NotFound.tsx                   404
   components/
     Hero/                          Landing — name + animated letters
-    About/                         Landing — bio + photo + animated line
+    About/                         Landing — bio + photo + animated line, held stage
     Manifesto/                     Landing — scroll-pinned word reveal
     Projects/                      Landing — horizontal scrolling cards + WORK letters
     Contact/                       Landing — footer w/ email + socials
     Navbar/                        Fixed nav, command-center overlay, TOC menu
-    Transitions/CombIntro.tsx      Loading intro overlay ("Hassan Ahmed" → fade)
+    Transitions/    CombIntro.tsx              Loading intro overlay — the mark draws itself
+    CombIntro.css             Styles for the intro overlay
     LoadingSpinner/                Spinner used in route Suspense fallbacks
     ErrorBoundary.tsx              Top-level error boundary (used per-section in App)
     SectionError/                  Error fallback UI
@@ -113,21 +114,53 @@ The four subpages are `React.lazy()`-loaded for code-splitting. The landing page
 
 `Contact` is intentionally eager because it's the closing section and lazy-wrapping it isn't worth the complexity.
 
+## The intro overlay
+
+`src/components/Transitions/CombIntro.tsx` + `.css` (the CSS file only exists since the intro was rebuilt — it used to have **no styles at all**, just a faded `<h1>`).
+
+The beat sheet, ~2.6s total, driven by one GSAP timeline:
+
+| time | beat |
+|---|---|
+| 0.15s | the isometric H draws itself (`strokeDashoffset` → 0, path length ~1327px) with a blue drop-shadow glow, dead centre of the screen |
+| 1.75s | the site behind starts fading up (`onReveal`), the mark flies past the camera (scale 5.5 + blur 26px + hot glow) |
+| 1.8s | the overlay's background fades to transparent over the revealed site |
+| ~2.6s | `onComplete` → the overlay unmounts |
+
+Nothing else on screen — the mark is the whole piece, so it sits alone at the centre of the frame.
+
+**The handoff is the whole trick.** `App.tsx` keeps two separate flags: `isLoading` (the overlay is up) and `contentReady` (the site is revealed). `onReveal` flips `contentReady` *before* the overlay dissolves, so the site fades up **behind** the mark instead of popping in after a black frame. `.content-area` therefore needs its `transition: opacity` — without it the reveal is a hard cut.
+
+Skippable: any key or click jumps the timeline to `progress(1)`, which still fires `onReveal` then `onComplete` in order.
+
+Shown on first visit only (`intro-seen` in localStorage) and never under reduced motion.
+
+**Replaying it:** `http://localhost:5173/?intro=1` forces the intro to play even for returning visitors (`App.tsx` checks the query param before reading localStorage). Without it you have to clear the flag:
+```js
+localStorage.removeItem('intro-seen')
+```
+
 ## The intro overlay + loading gate
 
-`CombIntro` runs a 1.5s + 0.8s GSAP fade, then calls `handleLoadingComplete` which:
-1. `setIsLoading(false)` (React state in `Portfolio`)
+`CombIntro` ends by calling `handleLoadingComplete` which:
+1. `setIsLoading(false)` (React state in `Portfolio` — unmounts the overlay)
 2. `localStorage.setItem('intro-seen', 'true')`
 3. `setTimeout(ScrollTrigger.refresh, 120)` (recompute trigger positions now that content is visible)
+
+It also calls `onReveal` earlier in the timeline, which flips `contentReady` and fades the site up behind the still-visible overlay.
 
 The content-area is hidden by default in `index.css`:
 
 ```css
-.content-area { opacity: 0; visibility: hidden; }
+.content-area {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.55s var(--ease-out-expo);
+}
 .content-area[data-loading="false"] { opacity: 1; visibility: visible; }
 ```
 
-The `data-loading` attribute is the triple `isLoading && !introSeen && !reducedMotion`. When reduced-motion is on, `setIsLoading(false)` runs immediately in the reduced-motion effect.
+`data-loading` is now just `!contentReady`. `contentReady` starts as `introSeen` (a returning visitor never sees the overlay) and is forced to `true` by the reduced-motion effect.
 
 ## Animation stack
 
@@ -138,9 +171,9 @@ The `data-loading` attribute is the triple `isLoading && !introSeen && !reducedM
 ## Sections — what each does
 
 - **Hero** — `useLetterExplosion` scatters the letters as you scroll past. Stars come from `StarField` (canvas twinkle).
-- **About** — Bio paragraph, school photo, and an animated vertical gradient line in the middle. Reveal is GSAP scrubs driven by ScrollTrigger; the line draws from top-down (`transform-origin: top center`).
+- **About** — Bio column on the left, school photo on the right, and the animated vertical gradient line between them. The reveal has two beats, in this order: **(1)** the stripe grows out of the dead center of the screen, expanding up *and* down (`scaleY` 0 → 1, `transform-origin: center center`) until it is complete; **(2)** only then do the text and photo slide out from behind it — text off to the left, photo off to the right. Desktop holds the section as a stage (`.about-grid` is `position: sticky; top: 0`, the section is `200svh`) so the whole reveal is watched happen on screen with the content framed and still, and the single scrubbed trigger runs `top top` → `bottom bottom`. Both columns are **clipped at the stripe** (`overflow: hidden` on `.about-content` / `.about-image-column`, no column gap) so a column can only ever slide *out* from behind the divider — it can never cross onto the other side. Mobile has no visible line, so it becomes a single one-shot timeline (photo rises, then text).
 - **Manifesto** — **Pinned** by ScrollTrigger. As you scroll through ~2000px of pinned scroll, five words fade in/out one at a time: "AI should empower not replace." (set in `Manifesto.tsx`). The pin is `+=2000`, which means the document grows by 2000px when manifesto is mounted. The CSS already had `.manifesto.pin-spacer` rules ready for this — only the `pin: true` flag was missing.
-- **Projects** — Horizontal-scrolling showcase of four project cards (AstroV / AG / Optiscan / LifeTrack). A three.js scene draws the letters W, O, R, K floating on a perspective curve above a dot grid (the "WORK" letters). The cards-container slides left as you scroll vertically through the section.
+- **Projects** — Horizontal-scrolling showcase of four project cards (AstroV / AG / Optiscan / LifeTrack). A three.js scene draws the letters W, O, R, K floating on a perspective curve above a dot grid (the "WORK" letters). The cards-container slides left as you scroll vertically through the section. Hovering a card swaps the native cursor for a floating info panel (`CustomCursor.tsx`) that trails the pointer with a lag and is clamped to the viewport; the panel is decorative (aria-hidden), the card itself stays the accessible control. The pointer position is kept in a ref, not state, so mouse movement never re-renders the pinned section.
 - **Contact** — Footer with the stylized H, email, GitHub + LinkedIn icons, copyright.
 
 ## Subpages
@@ -184,6 +217,24 @@ When `pin: true` is used on a section (Manifesto), GSAP wraps it in a `.pin-spac
 The original `ScrollTrigger` on Projects was `end: "+=400%"` with `moveDistance = window.innerWidth * 2`, on a document that's only ~4500px tall. ScrollTrigger could only run to ~25% progress, and the cards-container had `padding-left: 100vw` so the first card was off-screen at the right edge. Result: empty Projects section.
 
 **Fix:** `end: "+=100%"`, `moveDistance = window.innerWidth`, `padding-left: 5vw`. All four cards now reachable in a normal page scroll.
+
+### 6. `overflow-x: hidden` on `body` silently kills `position: sticky`
+
+`body { overflow-x: hidden }` turns the body into a scroll container that never scrolls. Any `position: sticky` descendant then sticks to *that* container instead of the viewport, so it simply scrolls away with the page — with no error and no warning. The About section's held stage silently did nothing because of this.
+
+**Fix:** `body { overflow-x: clip }`. `clip` hides the overflow without creating a scroll container, so sticky keeps working. Never use `overflow-x: hidden` on `body`/`html` in this project.
+
+### 7. A CSS `transform` beats the inline transform on the custom cursor
+
+`CustomCursor` writes its follow position to `style.transform` every frame. A stylesheet rule on the same element wins over the inline value — including with `!important` — so the panel sat parked at the top-left corner of the viewport while the native cursor was hidden.
+
+**Fix:** Never set `transform` in CSS for `.custom-cursor`; the JS owns it. If you need to restyle the panel, use other properties.
+
+### 8. Never insert DOM nodes into React-managed elements
+
+React's reconciler only knows about the children it rendered. Inserting a node into a React-managed element at runtime makes the DOM diverge from React's view of it, and the next re-render throws `NotFoundError: Failed to execute 'removeChild' on 'Node'` and the section falls over to the error boundary.
+
+**Fix:** If you need extra DOM, render it from JSX. If you genuinely need to touch the DOM by hand, do it in an element React treats as a leaf, and clean it up in the effect's teardown.
 
 ## Build & deploy
 

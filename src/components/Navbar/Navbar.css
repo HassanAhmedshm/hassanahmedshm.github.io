@@ -236,27 +236,42 @@
 }
 
 .arcade-header {
-  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
 }
 
 .arcade-title {
-  font-size: 1.125rem;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
   color: var(--text);
   display: block;
 }
 
+.arcade-title::before {
+  content: '▸';
+  color: var(--accent-blue);
+  margin-right: 0.5rem;
+}
+
 .arcade-subtitle {
-  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   color: var(--text-muted);
 }
 
 .arcade-games {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1.05fr) minmax(0, 0.95fr);
   gap: 1.1rem;
   flex: 1;
   min-height: 0;

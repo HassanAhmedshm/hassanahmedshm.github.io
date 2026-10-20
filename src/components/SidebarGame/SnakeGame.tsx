@@ -6,6 +6,121 @@ const GAME_HEIGHT = 180;
 const CELL_SIZE = 10;
 const COLS = GAME_WIDTH / CELL_SIZE;
 const ROWS = GAME_HEIGHT / CELL_SIZE;
+/** Backing-store multiplier so the game stays crisp on hi-dpi screens */
+const CANVAS_SCALE = 2;
+
+/* ─────────────── Drawing ─────────────── */
+
+const roundedBox = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+): void => {
+  ctx.beginPath();
+  if (typeof ctx.roundRect === "function") {
+    ctx.roundRect(x, y, w, h, r);
+  } else {
+    ctx.rect(x, y, w, h);
+  }
+};
+
+const drawGrid = (ctx: CanvasRenderingContext2D): void => {
+  ctx.fillStyle = "#0c1222";
+  ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+  ctx.strokeStyle = "rgba(148, 163, 184, 0.07)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let x = 0; x <= GAME_WIDTH; x += CELL_SIZE) {
+    ctx.moveTo(x + 0.5, 0);
+    ctx.lineTo(x + 0.5, GAME_HEIGHT);
+  }
+  for (let y = 0; y <= GAME_HEIGHT; y += CELL_SIZE) {
+    ctx.moveTo(0, y + 0.5);
+    ctx.lineTo(GAME_WIDTH, y + 0.5);
+  }
+  ctx.stroke();
+};
+
+const drawFood = (
+  ctx: CanvasRenderingContext2D,
+  food: Point,
+  time: number,
+): void => {
+  const cx = food.x * CELL_SIZE + CELL_SIZE / 2;
+  const cy = food.y * CELL_SIZE + CELL_SIZE / 2;
+  const pulse = 1 + Math.sin(time / 260) * 0.12;
+
+  ctx.save();
+  ctx.shadowColor = "rgba(239, 68, 68, 0.85)";
+  ctx.shadowBlur = 9;
+  ctx.fillStyle = "#ef4444";
+  ctx.beginPath();
+  ctx.arc(cx, cy, (CELL_SIZE / 2 - 1) * pulse, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
+  ctx.beginPath();
+  ctx.arc(cx - 1.4, cy - 1.6, 1.1, 0, Math.PI * 2);
+  ctx.fill();
+};
+
+const drawSnake = (
+  ctx: CanvasRenderingContext2D,
+  snake: Point[],
+  direction: Point,
+): void => {
+  const total = Math.max(1, snake.length - 1);
+
+  // Body: bright head fading into a dark tail
+  snake.forEach((segment, i) => {
+    const t = i / total;
+    const inset = 1 + t * 1.6;
+    const size = CELL_SIZE - inset * 2;
+    const green = Math.round(58 + (1 - t) * 104);
+    ctx.fillStyle = `rgb(${Math.round(22 + (1 - t) * 48)}, ${green}, ${Math.round(32 + (1 - t) * 62)})`;
+    roundedBox(ctx, segment.x * CELL_SIZE + inset, segment.y * CELL_SIZE + inset, size, size, 2.5);
+    ctx.fill();
+  });
+
+  // Head details
+  const head = snake[0];
+  const hx = head.x * CELL_SIZE + CELL_SIZE / 2;
+  const hy = head.y * CELL_SIZE + CELL_SIZE / 2;
+  const eyeOffset = 2.4;
+  const perpX = -direction.y;
+  const perpY = direction.x;
+
+  ctx.fillStyle = "#ffffff";
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.arc(
+      hx + direction.x * 1.4 + perpX * side * eyeOffset,
+      hy + direction.y * 1.4 + perpY * side * eyeOffset,
+      1.5,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  ctx.fillStyle = "#0f172a";
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.arc(
+      hx + direction.x * 1.9 + perpX * side * eyeOffset,
+      hy + direction.y * 1.9 + perpY * side * eyeOffset,
+      0.8,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+};
 
 interface Point {
   x: number;
@@ -100,6 +215,7 @@ const SnakeGame = () => {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0);
 
     const game = gameRef.current;
 
@@ -143,31 +259,9 @@ const SnakeGame = () => {
       }
 
       // Draw
-      ctx.fillStyle = '#0c1222';
-      ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-      // Draw food
-      ctx.fillStyle = '#ef4444';
-      ctx.beginPath();
-      ctx.arc(
-        game.food.x * CELL_SIZE + CELL_SIZE / 2,
-        game.food.y * CELL_SIZE + CELL_SIZE / 2,
-        CELL_SIZE / 2 - 1,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
-
-      // Draw snake
-      game.snake.forEach((segment, i) => {
-        ctx.fillStyle = i === 0 ? '#22c55e' : '#16a34a';
-        ctx.fillRect(
-          segment.x * CELL_SIZE + 1,
-          segment.y * CELL_SIZE + 1,
-          CELL_SIZE - 2,
-          CELL_SIZE - 2
-        );
-      });
+      drawGrid(ctx);
+      drawFood(ctx, game.food, Date.now());
+      drawSnake(ctx, game.snake, game.direction);
     };
 
     game.intervalId = window.setInterval(tick, 220);
@@ -185,30 +279,40 @@ const SnakeGame = () => {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0);
 
-    ctx.fillStyle = '#0c1222';
-    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-    // Draw sample snake
-    ctx.fillStyle = '#22c55e';
-    ctx.fillRect(101, 71, CELL_SIZE - 2, CELL_SIZE - 2);
-    ctx.fillStyle = '#16a34a';
-    ctx.fillRect(91, 71, CELL_SIZE - 2, CELL_SIZE - 2);
-    ctx.fillRect(81, 71, CELL_SIZE - 2, CELL_SIZE - 2);
-
-    // Draw sample food
-    ctx.fillStyle = '#ef4444';
-    ctx.beginPath();
-    ctx.arc(145, 75, CELL_SIZE / 2 - 1, 0, Math.PI * 2);
-    ctx.fill();
+    drawGrid(ctx);
+    drawFood(ctx, { x: 15, y: 7 }, Date.now());
+    drawSnake(
+      ctx,
+      [
+        { x: 10, y: 7 },
+        { x: 9, y: 7 },
+        { x: 8, y: 7 },
+        { x: 7, y: 7 },
+      ],
+      { x: 1, y: 0 },
+    );
   }, [gameState]);
 
   return (
-    <div className="snake-game" onClick={startGame} tabIndex={0}>
+    <div
+      className="snake-game"
+      onClick={startGame}
+      onKeyDown={(e) => {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          startGame();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label="Snake game"
+    >
       <canvas
         ref={canvasRef}
-        width={GAME_WIDTH}
-        height={GAME_HEIGHT}
+        width={GAME_WIDTH * CANVAS_SCALE}
+        height={GAME_HEIGHT * CANVAS_SCALE}
         className="snake-canvas"
       />
 

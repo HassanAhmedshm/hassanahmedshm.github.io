@@ -30,7 +30,7 @@ const LogoShowcase = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {logos.map(({ name, Component, desc }) => (
             <div key={name} className="flex flex-col items-center">
-              <div className="bg-gray-900 rounded-2xl p-8 mb-4 w-full aspect-square flex items-center justify-center border border-gray-800 hover:border-blue-500 transition-colors">
+              <div className="bg-gray-900 rounded-2xl p-8 mb-4 w-full aspect-square flex items-center justify-center border border-gray-800 hover:border-[var(--accent-blue)] transition-colors">
                 <Component size={80} className="text-white" />
               </div>
               <h3 className="font-bold text-center mb-1">{name}</h3>
@@ -44,7 +44,7 @@ const LogoShowcase = () => {
           <div className="space-y-6">
             {logos.slice(0, 4).map(({ name, Component }) => (
               <div key={name} className="flex items-center gap-4 p-4 bg-gray-800 rounded-lg">
-                <Component size={40} className="text-blue-400" />
+                <Component size={40} className="text-[var(--accent-blue-light)]" />
                 <div>
                   <h3 className="font-bold">Hassan Ahmed</h3>
                   <p className="text-sm text-gray-400">Full Stack Developer</p>

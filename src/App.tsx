@@ -32,8 +32,37 @@ gsap.registerPlugin(ScrollTrigger);
 /**
  * App - Main application shell with Lenis smooth scroll
  */
+/**
+ * `?intro=1` replays the intro even for returning visitors.
+ * With HashRouter the query can land before the hash (`/?intro=1`) or after it
+ * (`#/?intro=1`) — check both so it works however the URL was typed.
+ */
+const wantsIntro = (): boolean => {
+  try {
+    const { search, hash } = window.location;
+    if (new URLSearchParams(search).has('intro')) return true;
+    const hashQuery = hash.includes('?') ? hash.slice(hash.indexOf('?')) : '';
+    if (new URLSearchParams(hashQuery).has('intro')) return true;
+  } catch {
+    return false;
+  }
+  return false;
+};
+
 function Portfolio() {
+  const introSeen = (() => {
+    try {
+      if (wantsIntro()) return false;
+      return localStorage.getItem('intro-seen') === 'true';
+    } catch {
+      return false;
+    }
+  })();
+
   const [isLoading, setIsLoading] = useState(true);
+  // The site fades up behind the intro overlay — kept separate from
+  // `isLoading` so the overlay can dissolve *over* the revealed content.
+  const [contentReady, setContentReady] = useState(introSeen);
   const [reducedMotion, setReducedMotion] = useState(false);
   const lenisRef = useRef<Lenis | null>(null);
   const contentRef = useRef<HTMLElement | null>(null);
@@ -50,6 +79,7 @@ function Portfolio() {
       
       if (isReduced) {
         setIsLoading(false);
+        setContentReady(true);
       }
     };
     
@@ -121,14 +151,11 @@ function Portfolio() {
     }, 120);
   }, []);
 
-  const introSeen = (() => {
-    try {
-      return localStorage.getItem('intro-seen') === 'true';
-    } catch {
-      return false;
-    }
-  })();
-  
+  // The site starts fading up behind the overlay, before it dissolves
+  const handleContentReveal = useCallback(() => {
+    setContentReady(true);
+  }, []);
+
   // Refresh ScrollTrigger on layout changes (e.g., sidebar toggle)
   const refreshScrollTrigger = () => {
     ScrollTrigger.refresh();
@@ -151,12 +178,15 @@ function Portfolio() {
       </a>
 
       {!reducedMotion && isLoading && !introSeen && (
-        <CombIntro onComplete={handleLoadingComplete} />
+        <CombIntro
+          onReveal={handleContentReveal}
+          onComplete={handleLoadingComplete}
+        />
       )}
 
       <div
         className="content-area"
-        data-loading={isLoading && !introSeen && !reducedMotion}
+        data-loading={!contentReady}
       >
         <Navbar contentRef={contentRef} />
 

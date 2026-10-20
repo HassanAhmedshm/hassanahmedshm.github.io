@@ -51,7 +51,7 @@ const ReactionGame = () => {
   const getStateMessage = () => {
     switch (gameState) {
       case 'idle':
-        return { title: 'Reaction Test', subtitle: 'Click to start', color: '#8b5cf6' };
+        return { title: 'Reaction Test', subtitle: 'Click to start', color: '#2f80c4' };
       case 'waiting':
         return { title: 'Wait...', subtitle: 'Click when green!', color: '#ef4444' };
       case 'ready':
@@ -60,27 +60,35 @@ const ReactionGame = () => {
         return { 
           title: `${reactionTime}ms`, 
           subtitle: reactionTime! < 250 ? 'Great!' : reactionTime! < 350 ? 'Good' : 'Try again',
-          color: '#8b5cf6'
+          color: '#2f80c4'
         };
       case 'toosoon':
         return { title: 'Too soon!', subtitle: 'Click to retry', color: '#ef4444' };
       default:
-        return { title: '', subtitle: '', color: '#8b5cf6' };
+        return { title: '', subtitle: '', color: '#2f80c4' };
     }
   };
 
   const state = getStateMessage();
 
   return (
-    <div 
-      className="reaction-game" 
+    <div
+      className={`reaction-game${gameState === 'ready' ? ' reaction-game--ready' : ''}`}
       onClick={startGame}
-      style={{ 
+      onKeyDown={(e) => {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          startGame();
+        }
+      }}
+      style={{
         '--game-color': state.color,
-        backgroundColor: gameState === 'ready' ? '#22c55e' : 
+        backgroundColor: gameState === 'ready' ? '#22c55e' :
                          gameState === 'waiting' ? '#ef4444' : '#0c1222'
       } as React.CSSProperties}
+      role="button"
       tabIndex={0}
+      aria-label="Reaction test game"
     >
       <div className="reaction-content">
         <span className="reaction-title" style={{ color: gameState === 'ready' || gameState === 'waiting' ? '#fff' : state.color }}>
@@ -90,7 +98,7 @@ const ReactionGame = () => {
           {state.subtitle}
         </span>
       </div>
-      
+
       {bestTime !== null && (
         <div className="reaction-best">Best: {bestTime}ms</div>
       )}

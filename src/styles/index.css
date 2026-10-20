@@ -12,18 +12,20 @@
   --border: #27272a;
   --border-hover: #3f3f46;
 
-  /* Colors — Accent */
-  --accent-blue: #3b82f6;
-  --accent-blue-dark: #1d4ed8;
-  --accent-blue-glow: rgba(59, 130, 246, 0.15);
-  --accent-amber: #FF7A00;
-  --accent-amber-dark: #e06e00;
-  --accent-amber-glow: rgba(255, 122, 0, 0.15);
-  --accent-amber-text: #FF9248;
+  /* Colors — Accent (single hue — one sea blue for the whole site) */
+  --accent-blue: #2f80c4;
+  --accent-blue-light: #4d9fd8;
+  --accent-blue-dark: #1b5e91;
+  --accent-blue-glow: rgba(47, 128, 196, 0.16);
+  /* Legacy aliases — kept pointed at blue so older variables don't pull in a second hue */
+  --accent-violet: var(--accent-blue);
+  --accent-violet-dark: var(--accent-blue-dark);
+  --accent-violet-glow: var(--accent-blue-glow);
+  --accent-violet-text: var(--accent-blue);
 
-  /* Colors — Gradients */
-  --gradient-primary: linear-gradient(135deg, var(--accent-blue), var(--accent-amber));
-  --gradient-text: linear-gradient(135deg, var(--accent-blue), var(--accent-amber));
+  /* Colors — Gradients (now solid blue — no second hue) */
+  --gradient-primary: var(--accent-blue);
+  --gradient-text: var(--accent-blue);
 
   /* Colors — Text */
   --text-primary: #e5e5e5;
@@ -34,7 +36,7 @@
   /* Colors — States */
   --success: #22c55e;
   --error: #ef4444;
-  --warning: #f59e0b;
+  --warning: #eab308;
 
   /* Surface overlay for modals/dialogs */
   --overlay-bg: rgba(2, 6, 23, 0.9);
@@ -54,18 +56,19 @@
   --border: #dee2e6;
   --border-hover: #ced4da;
 
-  /* Colors — Accent */
-  --accent-blue: #2563eb;
-  --accent-blue-dark: #1d4ed8;
-  --accent-blue-glow: rgba(37, 99, 235, 0.1);
-  --accent-amber: #f97316;
-  --accent-amber-dark: #ea580c;
-  --accent-amber-glow: rgba(249, 115, 22, 0.1);
-  --accent-amber-text: #ea580c;
+  /* Colors — Accent (single hue) */
+  --accent-blue: #1f6fa8;
+  --accent-blue-light: #2f86c4;
+  --accent-blue-dark: #17567f;
+  --accent-blue-glow: rgba(31, 111, 168, 0.12);
+  --accent-violet: var(--accent-blue);
+  --accent-violet-dark: var(--accent-blue-dark);
+  --accent-violet-glow: var(--accent-blue-glow);
+  --accent-violet-text: var(--accent-blue);
 
-  /* Colors — Gradients */
-  --gradient-primary: linear-gradient(135deg, var(--accent-blue), var(--accent-amber));
-  --gradient-text: linear-gradient(135deg, var(--accent-blue), var(--accent-amber));
+  /* Colors — Gradients (solid blue) */
+  --gradient-primary: var(--accent-blue);
+  --gradient-text: var(--accent-blue);
 
   /* Colors — Text */
   --text-primary: #1a1a2e;
@@ -76,7 +79,7 @@
   /* Colors — States */
   --success: #16a34a;
   --error: #dc2626;
-  --warning: #d97706;
+  --warning: #ca8a04;
 
   /* Surface overlay for modals/dialogs */
   --overlay-bg: rgba(255, 255, 255, 0.9);
@@ -141,8 +144,8 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
-  --shadow-glow-blue: 0 0 20px rgba(59, 130, 246, 0.15);
-  --shadow-glow-amber: 0 0 20px rgba(255, 122, 0, 0.15);
+  --shadow-glow-blue: 0 0 20px rgba(47, 128, 196, 0.16);
+  --shadow-glow-violet: var(--shadow-glow-blue);
 
   /* Border Radius */
   --radius-sm: 4px;
@@ -236,7 +239,9 @@ body {
   background-color: var(--bg-dark);
   color: var(--text);
   min-height: 100svh;
-  overflow-x: hidden;
+  /* `clip` instead of `hidden`: `hidden` turns the body into a scroll
+     container, which silently breaks every `position: sticky` descendant. */
+  overflow-x: clip;
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
@@ -480,6 +485,8 @@ p {
 .content-area {
   opacity: 0;
   visibility: hidden;
+  /* Fades up behind the intro overlay so the handoff has no hard cut */
+  transition: opacity 0.55s var(--ease-out-expo);
 }
 
 .content-area[data-loading="false"] {

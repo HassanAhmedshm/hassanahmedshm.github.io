@@ -3,27 +3,33 @@
    ============================================ */
 
 .about {
-  min-height: 100svh;
-  min-height: 100dvh;
   background: var(--bg-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-16) var(--space-8);
-  margin-top: 0;
   position: relative;
   z-index: 1;
   overflow: visible;
 }
 
+/* Desktop — the section is a held stage so the reveal has room to breathe */
+.main-content section.about {
+  min-height: 200svh;
+  min-height: 200dvh;
+  display: block;
+  padding: 0 var(--space-8);
+  margin-top: 0;
+}
+
 .about-grid {
-  position: relative;
+  position: sticky;
+  top: 0;
+  height: 100svh;
   display: grid;
-  grid-template-columns: 1fr 2px 1fr;
-  gap: 0;
+  /* No gap: both columns butt against the stripe so the clip happens there */
+  grid-template-columns: 1fr 3px 1fr;
+  column-gap: 0;
+  align-items: center;
   max-width: 1200px;
   width: 100%;
-  align-items: center;
+  margin: 0 auto;
 }
 
 /* Center decorative line - starts as a dot, expands vertically */
@@ -31,41 +37,57 @@
   position: relative;
   width: 3px;
   height: 80vh;
-  background: linear-gradient(to bottom, var(--accent-blue), var(--accent-amber));
+  background: linear-gradient(to bottom, var(--accent-blue), var(--accent-blue-dark));
   border-radius: 2px;
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.35), 0 0 24px rgba(255, 122, 0, 0.2);
+  box-shadow: 0 0 12px rgba(47, 128, 196, 0.35), 0 0 24px rgba(47, 128, 196, 0.2);
   transform-origin: top center;
   align-self: center;
   justify-self: center;
   z-index: 2;
 }
 
-/* Image column */
-.about-image-wrapper {
-  display: flex;
-  justify-content: flex-start;
-  padding-left: 2rem;
+/* Text column - clipped at the stripe so text never crosses to the other side */
+.about-content {
   position: relative;
   z-index: 1;
+  overflow: hidden;
+  padding-right: var(--space-8);
+}
+
+.about-content-inner {
+  position: relative;
+  z-index: 1;
+}
+
+/* Image column - clipped at the stripe for the same reason */
+.about-image-column {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  padding-left: var(--space-8);
+}
+
+.about-image-wrapper {
+  position: relative;
+  width: 85%;
+  max-width: 100%;
   min-height: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 .about-image {
-  max-width: 85%;
-  width: 85%;
+  display: block;
+  width: 100%;
   max-height: 400px;
   object-fit: cover;
-  border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   transition: opacity 0.3s ease;
 }
 
 .about-image-placeholder {
   position: absolute;
   inset: 0;
-  max-width: 100%;
-  width: 100%;
-  max-height: 500px;
   border-radius: 12px;
   background: linear-gradient(90deg, var(--surface) 25%, var(--border) 50%, var(--surface) 75%);
   background-size: 200% 100%;
@@ -82,7 +104,6 @@
 }
 
 .about-image-error {
-  max-width: 100%;
   width: 100%;
   max-height: 500px;
   border-radius: 12px;
@@ -100,13 +121,6 @@
 }
 
 /* Text column */
-.about-content {
-  padding-right: 2rem;
-  text-align: left;
-  position: relative;
-  z-index: 1;
-}
-
 .about-title {
   font-size: var(--fs-4xl);
   font-weight: var(--fw-bold);
@@ -130,14 +144,20 @@
    MOBILE RESPONSIVE
    ============================================ */
 @media (max-width: 767px) {
-  .about {
-    padding: var(--space-12) var(--space-6);
+  .main-content section.about {
+    min-height: 100svh;
+    min-height: 100dvh;
+    display: flex;
     align-items: center;
+    padding: var(--space-12) var(--space-6);
   }
 
   .about-grid {
+    position: static;
+    height: auto;
     grid-template-columns: 1fr;
-    gap: 2rem;
+    row-gap: 2rem;
+    column-gap: 0;
     width: 100%;
     max-width: 100%;
   }
@@ -147,24 +167,27 @@
     display: none;
   }
 
-  .about-image-wrapper {
-    justify-content: center;
-    order: 1;
-    padding-left: 0;
+  .about-content {
+    overflow: visible;
     padding-right: 0;
+    order: 2;
   }
 
-  .about-image {
-    max-height: 280px;
-    max-width: 75%;
+  .about-image-column {
+    overflow: visible;
+    padding-left: 0;
+    order: 1;
+  }
+
+  .about-image-wrapper {
+    width: 75%;
     margin: 0 auto;
   }
 
-  .about-content {
+  .about-content-inner {
     text-align: center;
     padding-left: 1rem;
     padding-right: 1rem;
-    order: 2;
   }
 
   .about-title {

@@ -198,14 +198,45 @@ const Navbar = ({ contentRef }: NavbarProps) => {
   }, []);
 
   useEffect(() => {
-    const triggers: ScrollTrigger[] = [];
-    let raf = 0;
     let mounted = true;
+    let raf = 0;
+    let trigger: ScrollTrigger | null = null;
 
-    // The four lazy-loaded sections (Hero/About/Manifesto/Projects) aren't in
-    // the DOM on the first commit. Keep retrying via rAF until every section
-    // is mounted, then wire the triggers. Without this only Contact's trigger
-    // ever gets created and "Contact" ends up permanently highlighted.
+    // Pick the section whose visible center is closest to the viewport's
+    // vertical center. This works for pinned sections (Manifesto, Projects)
+    // too — getBoundingClientRect() reflects the painted position, including
+    // the pin translation, so the highlight tracks what the user actually
+    // sees instead of what the un-pinned layout thinks is there.
+    const update = () => {
+      raf = 0;
+      if (!mounted) return;
+      const vh = window.innerHeight;
+      const center = vh / 2;
+      let bestId = sections[0].id;
+      let bestDist = Infinity;
+      for (const { id } of sections) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const rect = el.getBoundingClientRect();
+        // Skip sections that aren't on screen at all.
+        if (rect.bottom < 0 || rect.top > vh) continue;
+        const sectionCenter = rect.top + rect.height / 2;
+        const dist = Math.abs(sectionCenter - center);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestId = id;
+        }
+      }
+      setActiveSection((current) => (current === bestId ? current : bestId));
+    };
+
+    const schedule = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(update);
+    };
+
+    // Lazy-loaded sections aren't in the DOM on first commit. Poll with rAF
+    // until every section is mounted, then start tracking.
     const setup = () => {
       if (!mounted) return;
       const missing = sections.some(({ id }) => !document.getElementById(id));
@@ -213,26 +244,14 @@ const Navbar = ({ contentRef }: NavbarProps) => {
         raf = requestAnimationFrame(setup);
         return;
       }
-      sections.forEach(({ id }) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        // When a section is pinned by another ScrollTrigger (e.g. Manifesto),
-        // GSAP wraps it in a `.pin-spacer`. Using the section as the trigger
-        // would lock its viewport top to 0 during the pin, so "top center"
-        // never fires. Use the pin-spacer (which still scrolls naturally) as
-        // the trigger instead.
-        const triggerEl = el.parentElement?.classList.contains('pin-spacer')
-          ? el.parentElement
-          : el;
-        const trigger = ScrollTrigger.create({
-          trigger: triggerEl,
-          start: 'top center',
-          end: 'bottom center',
-          onEnter: () => setActiveSection(id),
-          onEnterBack: () => setActiveSection(id),
-        });
-        triggers.push(trigger);
+      trigger = ScrollTrigger.create({
+        start: 0,
+        end: 'max',
+        onUpdate: schedule,
       });
+      // Recompute when layout shifts (lazy chunks load, fonts swap, resize).
+      ScrollTrigger.addEventListener('refresh', schedule);
+      update();
     };
 
     setup();
@@ -240,7 +259,8 @@ const Navbar = ({ contentRef }: NavbarProps) => {
     return () => {
       mounted = false;
       if (raf) cancelAnimationFrame(raf);
-      triggers.forEach((trigger) => trigger.kill());
+      if (trigger) trigger.kill();
+      ScrollTrigger.removeEventListener('refresh', schedule);
     };
   }, [contentRef]);
 
@@ -335,7 +355,7 @@ const Navbar = ({ contentRef }: NavbarProps) => {
       >
         <div className="navbar-container">
           <button className="navbar-logo" onClick={() => scrollTo("hero")}>
-            <IsometricH size={80} className="text-blue-400" />
+            <IsometricH size={80} className="text-[var(--accent-blue-light)]" />
           </button>
           <div className="navbar-center">
             <a
@@ -441,7 +461,7 @@ const Navbar = ({ contentRef }: NavbarProps) => {
               <div className="toc-sidebar-easter">
                 <div className="rotating-logo-container" aria-hidden="true">
                   <div className="rotating-logo">
-                    <IsometricH size={48} className="text-blue-400" />
+                    <IsometricH size={48} className="text-[var(--accent-blue-light)]" />
                   </div>
                 </div>
                 <div className="terminal-quote">

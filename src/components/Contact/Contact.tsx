@@ -69,7 +69,7 @@ const Contact = () => {
         <footer className="contact-footer">
           <div className="footer-container">
             <button className="footer-logo" onClick={() => scrollTo('hero')}>
-              <IsometricH size={70} className="text-blue-400" />
+              <IsometricH size={70} className="text-[var(--accent-blue-light)]" />
             </button>
             <p className="footer-copyright">© 2026 Hassan Ahmed</p>
           </div>

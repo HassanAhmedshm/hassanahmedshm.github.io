@@ -1,7 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import * as THREE from "three";
 import CustomCursor from "./CustomCursor";
 import { useDeviceCapabilities } from "../../hooks/useDeviceCapabilities";
 import { useScrollTriggerCleanup } from "../../hooks/useScrollTriggerCleanup";
@@ -9,7 +8,18 @@ import "./Projects.css";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const projects = [
+interface Project {
+  id: number;
+  title: string;
+  brief: string;
+  image: string;
+  fit?: "cover" | "contain";
+  scrim?: boolean;
+  link: string;
+  metrics: string[];
+}
+
+const projects: Project[] = [
   {
     id: 1,
     title: "AstroV",
@@ -22,7 +32,7 @@ const projects = [
     id: 2,
     title: "AG (Autonomous Agent)",
     brief: "Python-based autonomous agent for developer workflow automation.",
-    image: "/images/astrov_long.png",
+    image: "/ag-cover.png",
     link: "/ag",
     metrics: ["50x retry", "Multi-provider", "Local-first"],
   },
@@ -38,82 +48,101 @@ const projects = [
     id: 4,
     title: "LifeTrack AI",
     brief: "Health dashboard with AI life coach and data visualization.",
-    image: "/lifetrack.png",
+    image: "/lifetrack-logo.svg",
+    fit: "contain",
+    scrim: false,
     link: "/lifetrack",
     metrics: ["AI coaching", "Habit tracking", "Smart insights"],
   },
 ];
 
-const lerp = (start: number, end: number, t: number) =>
+const lerp = (start: number, end: number, t: number): number =>
   start + (end - start) * t;
 
 interface ProjectsProps {
   reducedMotion?: boolean;
 }
 
+interface Vec3 {
+  x: number;
+  y: number;
+  z: number;
+}
+
+interface LetterState {
+  el: HTMLDivElement;
+  lineIndex: number;
+  index: number;
+  currentX: number;
+  currentY: number;
+  currentScale: number;
+  targetX: number;
+  targetY: number;
+  targetScale: number;
+  ready: boolean;
+}
+
+const LETTERS_PER_LINE = 12;
+const LINE_SPEED_MULTIPLIERS = [0.8, 1, 0.7, 0.9] as const;
+const LETTER_LABELS = ["W", "O", "R", "K"] as const;
+const CAMERA_Z = 20;
+const CAMERA_FOV_DEG = 50;
+
+/** Sample a point on the letter path (same geometry as the reference demo). */
+const pathPoint = (t: number, yPos: number, amplitude: number): Vec3 => {
+  // Clamp/wrap t into [0, 1]
+  let u = t % 1;
+  if (u < 0) u += 1;
+  return {
+    x: -25 + 50 * u,
+    y: yPos + Math.sin(u * Math.PI) * -amplitude,
+    z: (1 - Math.pow(Math.abs(u - 0.5) * 2, 2)) * -5,
+  };
+};
+
+/**
+ * Perspective project world → screen (matches THREE.PerspectiveCamera fov=50 at z=20).
+ * X is flipped like the reference so letters stream right→left as scroll advances.
+ */
+const projectToScreen = (
+  p: Vec3,
+  width: number,
+  height: number,
+): { x: number; y: number; scale: number } => {
+  const depth = CAMERA_Z - p.z;
+  if (depth <= 0.01) {
+    return { x: width / 2, y: height / 2, scale: 0.3 };
+  }
+  const fl = height / 2 / Math.tan((CAMERA_FOV_DEG * Math.PI) / 360);
+  // X flipped (reference): world -X → screen right
+  const x = width / 2 - (p.x * fl) / depth;
+  const y = height / 2 - (p.y * fl) / depth;
+  const scale = Math.min(1.1, Math.max(0.5, CAMERA_Z / depth));
+  return { x, y, scale };
+};
+
+const ROW_CONFIG = [
+  { yPos: 7.6, amplitude: 2 },
+  { yPos: 2.6, amplitude: 1 },
+  { yPos: -2.6, amplitude: -1 },
+  { yPos: -7.6, amplitude: -2 },
+] as const;
+
 const Projects = ({ reducedMotion = false }: ProjectsProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
   const gridCanvasRef = useRef<HTMLCanvasElement>(null);
   const textContainerRef = useRef<HTMLDivElement>(null);
-  const webglContainerRef = useRef<HTMLDivElement>(null);
   const mobileCardsRef = useRef<HTMLDivElement>(null);
-  const scrollHintRef = useRef<HTMLDivElement>(null);
-  const progressBarRef = useRef<HTMLDivElement>(null);
 
-  const [hoveredProject, setHoveredProject] = useState<any>(null);
-  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+  const [hoveredProject, setHoveredProject] = useState<Project | null>(null);
+  // Pointer position lives in a ref: mouse movement must not re-render the
+  // pinned section (it owns a rAF loop and a ScrollTrigger).
+  const cursorPosRef = useRef({ x: 0, y: 0 });
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
 
-  const { isMobile, recommendedParticleCount } = useDeviceCapabilities();
+  const { isMobile } = useDeviceCapabilities();
   const { registerInstance } = useScrollTriggerCleanup();
-  const cardMicroRef = useRef<Map<number, gsap.core.Tween>>(new Map());
-
-  const handleMobileCardEnter = (id: number, e: React.MouseEvent) => {
-    const card = e.currentTarget as HTMLElement;
-    if (cardMicroRef.current.has(id)) cardMicroRef.current.get(id)?.kill();
-    const tl = gsap.to(card.querySelector('.mobile-card-arrow'), {
-      x: 4,
-      color: 'var(--accent-blue)',
-      duration: 0.3,
-      ease: 'back.out(1.7)',
-      overwrite: 'auto',
-    });
-    cardMicroRef.current.set(id, tl);
-  };
-
-  const handleMobileCardLeave = (id: number, e: React.MouseEvent) => {
-    const card = e.currentTarget as HTMLElement;
-    if (cardMicroRef.current.has(id)) cardMicroRef.current.get(id)?.kill();
-    const tl = gsap.to(card.querySelector('.mobile-card-arrow'), {
-      x: 0,
-      color: 'var(--text-tertiary)',
-      duration: 0.3,
-      ease: 'power2.out',
-      overwrite: 'auto',
-    });
-    cardMicroRef.current.set(id, tl);
-  };
-
-  const handleMobileCardDown = (_id: number, e: React.MouseEvent) => {
-    const card = e.currentTarget as HTMLElement;
-    gsap.to(card, {
-      scale: 0.97,
-      duration: 0.1,
-      ease: 'power2.in',
-      overwrite: 'auto',
-    });
-  };
-
-  const handleMobileCardUp = (_id: number, e: React.MouseEvent) => {
-    const card = e.currentTarget as HTMLElement;
-    gsap.to(card, {
-      scale: 1,
-      duration: 0.3,
-      ease: 'back.out(2)',
-      overwrite: 'auto',
-    });
-  };
 
   useEffect(() => {
     return () => {
@@ -121,29 +150,16 @@ const Projects = ({ reducedMotion = false }: ProjectsProps) => {
     };
   }, []);
 
-  // Mobile entrance animations - cards appear from alternating sides
+  // Mobile entrance animations
   useEffect(() => {
-    if (reducedMotion) return;
-    // Only run on mobile
-    if (!isMobile) return;
-    if (!mobileCardsRef.current) return;
-
-    const cards = mobileCardsRef.current.querySelectorAll('.mobile-card');
+    if (reducedMotion || !isMobile || !mobileCardsRef.current) return;
+    const cards = Array.from(
+      mobileCardsRef.current.querySelectorAll<HTMLElement>(".mobile-card"),
+    );
     if (cards.length === 0) return;
 
-    const cardsArray = Array.from(cards);
-
-    // Kill any existing ScrollTriggers for mobile cards
-    ScrollTrigger.getAll().forEach(st => {
-      if (st.vars.trigger && cardsArray.includes(st.vars.trigger as Element)) {
-        st.kill();
-      }
-    });
-
     cards.forEach((card, index) => {
-      // Use viewport width for more dramatic slide-in
-      const fromX = index % 2 === 0 ? '-100%' : '100%';
-
+      const fromX = index % 2 === 0 ? "-100%" : "100%";
       gsap.from(card, {
         x: fromX,
         opacity: 0,
@@ -157,623 +173,437 @@ const Projects = ({ reducedMotion = false }: ProjectsProps) => {
       });
     });
 
-    // Cleanup on unmount
     return () => {
-      ScrollTrigger.getAll().forEach(st => {
-        if (st.vars.trigger && cardsArray.includes(st.vars.trigger as Element)) {
+      ScrollTrigger.getAll().forEach((st) => {
+        if (st.vars.trigger && cards.includes(st.vars.trigger as HTMLElement)) {
           st.kill();
         }
       });
     };
   }, [isMobile, reducedMotion]);
 
+  // Desktop showcase: letters + horizontal cards (no Three.js — pure math projection)
   useEffect(() => {
-    if (reducedMotion) return;
-    if (!isMobile || !sectionRef.current) return;
-
-    const fadeStart = 0.72;
-    const fadeTrigger = ScrollTrigger.create({
-      trigger: sectionRef.current,
-      start: 'top top',
-      end: 'bottom top',
-      scrub: 1,
-      onUpdate: (self) => {
-        const fadeProgress = self.progress <= fadeStart
-          ? 0
-          : (self.progress - fadeStart) / (1 - fadeStart);
-        const clampedProgress = Math.min(1, fadeProgress);
-        const opacity = 1 - clampedProgress * 0.9;
-        gsap.set(sectionRef.current, { opacity });
-      }
-    });
-
-    registerInstance(fadeTrigger);
-
-    return () => {
-      if (sectionRef.current) {
-        gsap.set(sectionRef.current, { opacity: 1 });
-      }
-    };
-  }, [isMobile, registerInstance]);
-
-  // Desktop animations - W O R K letters and horizontal scroll
-  useEffect(() => {
-    if (reducedMotion) {
-      if (cardsContainerRef.current) {
-        gsap.set(cardsContainerRef.current, { opacity: 1 });
-      }
-      return;
-    }
-
-    // Only run on desktop
-    if (isMobile) return;
-    
+    if (reducedMotion || isMobile) return;
     if (
       !sectionRef.current ||
       !cardsContainerRef.current ||
       !gridCanvasRef.current ||
-      !textContainerRef.current ||
-      !webglContainerRef.current
-    )
+      !textContainerRef.current
+    ) {
       return;
+    }
 
     let isActive = true;
-    let animationFrameId: number;
+    let animationFrameId = 0;
     let currentXPosition = 0;
+    let moveDistance = window.innerWidth * 2.5;
+    let scrollProgress = 0;
 
-    // Travel distance for the horizontal card scroll, measured from the actual
-    // on-screen position of the last card so card 4 ends up centered at
-    // progress = 1 regardless of card widths/gaps. Measured after one frame so
-    // the 3D perspective transforms are already applied.
-    let moveDistance = 0;
-    const measureMoveDistance = () => {
-      const cards = Array.from(
-        cardsContainerRef.current!.querySelectorAll('.showcase-card'),
-      );
-      const last = cards[cards.length - 1];
-      gsap.set(cardsContainerRef.current, { x: 0 });
-      // Neutralize the per-card 3D transform so we measure the true layout
-      // center (otherwise the perspective shift throws off the travel math).
-      const prevTransform = last.style.transform;
-      last.style.transform = 'none';
-      const r = last.getBoundingClientRect();
-      last.style.transform = prevTransform;
-      moveDistance = r.left + r.width / 2 - window.innerWidth / 2;
-    };
-    requestAnimationFrame(measureMoveDistance);
+    const gridCanvas = gridCanvasRef.current;
+    const gridCtx = gridCanvas.getContext("2d");
+    if (!gridCtx) return;
 
-    // 1. Grid Canvas Setup
-    const gridCtx = gridCanvasRef.current.getContext("2d")!;
-    const resizeGridCanvas = () => {
-      if (!gridCanvasRef.current) return;
-      const dpr = window.devicePixelRatio || 1;
-      gridCanvasRef.current.width = window.innerWidth * dpr;
-      gridCanvasRef.current.height = window.innerHeight * dpr;
-      gridCtx.scale(dpr, dpr);
+    const textContainer = textContainerRef.current;
+    textContainer.innerHTML = "";
+
+    // --- Dot grid ---
+    const resizeGridCanvas = (): void => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      gridCanvas.width = w * dpr;
+      gridCanvas.height = h * dpr;
+      gridCanvas.style.width = `${w}px`;
+      gridCanvas.style.height = `${h}px`;
+      gridCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resizeGridCanvas();
 
-    const drawGrid = (scrollProgress = 0) => {
-      if (!gridCanvasRef.current) return;
-
-      gridCtx.clearRect(
-        0,
-        0,
-        gridCanvasRef.current.width,
-        gridCanvasRef.current.height,
-      );
-      const dotSize = 1;
-      const spacing = 40;
-
-      const rows = Math.ceil(window.innerHeight / spacing);
-      const cols = Math.ceil(window.innerWidth / spacing) + 15;
-
-      const offset = (scrollProgress * spacing * 10) % spacing;
-
+    const drawGrid = (progress = 0): void => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      gridCtx.fillStyle = "#0a0a0a";
+      gridCtx.fillRect(0, 0, w, h);
+      gridCtx.fillStyle = "rgba(47, 128, 196, 0.45)";
+      const spacing = 30;
+      const rows = Math.ceil(h / spacing) + 1;
+      const cols = Math.ceil(w / spacing) + 15;
+      const offset = (progress * spacing * 10) % spacing;
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
-          const useAmber = (x + y + Math.floor(scrollProgress * 10)) % 3 === 0;
-          gridCtx.fillStyle = useAmber ? '#FF7A00' : '#3b82f6';
           gridCtx.beginPath();
-          gridCtx.arc(
-            x * spacing - offset,
-            y * spacing,
-            dotSize,
-            0,
-            Math.PI * 2,
-          );
+          gridCtx.arc(x * spacing - offset, y * spacing, 1, 0, Math.PI * 2);
           gridCtx.fill();
         }
       }
     };
 
-    // 2. Three.js Letters Setup
-    const lettersScene = new THREE.Scene();
-    const lettersCamera = new THREE.PerspectiveCamera(
-      50,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000,
-    );
-    lettersCamera.position.z = 20;
-    // Critical: update the camera's world matrix before projecting letter
-    // points. Without this, matrixWorldInverse stays identity (camera at the
-    // origin), so points at z=0 project to Infinity and every letter position
-    // becomes NaN — the letters then collapse to the top-left corner.
-    lettersCamera.updateMatrixWorld(true);
+    // --- Letters: create DOM nodes with positions already applied (no top-left flash) ---
+    const letters: LetterState[] = [];
+    const vw0 = window.innerWidth;
+    const vh0 = window.innerHeight;
 
-    const lettersRenderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-    });
-    lettersRenderer.setSize(window.innerWidth, window.innerHeight);
-    lettersRenderer.setClearColor(0x000000, 0);
-    lettersRenderer.setPixelRatio(window.devicePixelRatio);
-    webglContainerRef.current.appendChild(lettersRenderer.domElement);
+    ROW_CONFIG.forEach((row, lineIndex) => {
+      for (let i = 0; i < LETTERS_PER_LINE; i++) {
+        const t = i / (LETTERS_PER_LINE - 1);
+        const world = pathPoint(t, row.yPos, row.amplitude);
+        const screen = projectToScreen(world, vw0, vh0);
 
-    const createTextAnimationPath = (yPos: number, amplitude: number) => {
-      const points = [];
-      for (let i = 0; i <= 20; i++) {
-        const t = i / 20;
-        points.push(
-          new THREE.Vector3(
-            -25 + 50 * t,
-            yPos + Math.sin(t * Math.PI) * -amplitude,
-            (1 - Math.pow(Math.abs(t - 0.5) * 2, 2)) * -5,
-          ),
-        );
-      }
-      const curve = new THREE.CatmullRomCurve3(points);
-      const line = new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(curve.getPoints(100)),
-        new THREE.LineBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.15 }),
-      );
-      (line as any).curve = curve;
-
-      // Secondary line with amber offset
-      const offsetPoints = points.map(p => new THREE.Vector3(p.x, p.y + 0.3, p.z));
-      const offsetCurve = new THREE.CatmullRomCurve3(offsetPoints);
-      const line2 = new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(offsetCurve.getPoints(100)),
-        new THREE.LineBasicMaterial({ color: 0xFF7A00, transparent: true, opacity: 0.08 }),
-      );
-      (line as any).secondaryLine = line2;
-
-      return line;
-    };
-
-    const paths = [
-      createTextAnimationPath(10, 2),
-      createTextAnimationPath(3.5, 1),
-      createTextAnimationPath(-3.5, -1),
-      createTextAnimationPath(-10, -2),
-    ];
-    paths.forEach((line) => {
-      lettersScene.add(line);
-      if ((line as any).secondaryLine) {
-        lettersScene.add((line as any).secondaryLine);
-      }
-    });
-
-    const letters = ["W", "O", "R", "K"];
-    const letterPositions = new Map();
-
-    // 15 letters per row, matching the reference marquee density
-    const lettersPerLine = 15;
-
-    textContainerRef.current.innerHTML = "";
-
-    paths.forEach((line, i) => {
-      const lineElements: HTMLDivElement[] = [];
-      for (let j = 0; j < lettersPerLine; j++) {
         const el = document.createElement("div");
         el.className = "letter-3d";
-        el.textContent = letters[i];
+        el.textContent = LETTER_LABELS[lineIndex];
+        el.setAttribute("aria-hidden", "true");
+        // Position BEFORE insert so nothing paints at (0,0)
+        el.style.transform = `translate3d(${screen.x}px, ${screen.y}px, 0) translate(-50%, -50%) scale(${screen.scale})`;
+        el.style.opacity = "0.75";
+        textContainer.appendChild(el);
 
-        // Calculate initial position immediately based on the path
-        let tRaw = (j / (lettersPerLine - 1)) % 1;
-        const point = line.curve.getPoint(tRaw);
-        const vector = point.clone().project(lettersCamera);
-        const initialX = (-vector.x * 0.5 + 0.5) * window.innerWidth;
-        const initialY = (-vector.y * 0.5 + 0.5) * window.innerHeight;
-
-        // Set transform BEFORE appending to DOM
-        el.style.transform = `translate(-50%, -50%) translate3d(${initialX}px, ${initialY}px, 0px)`;
-
-        textContainerRef.current!.appendChild(el);
-
-        letterPositions.set(el, {
-          current: { x: initialX, y: initialY },
-          target: { x: initialX, y: initialY },
+        letters.push({
+          el,
+          lineIndex,
+          index: i,
+          currentX: screen.x,
+          currentY: screen.y,
+          currentScale: screen.scale,
+          targetX: screen.x,
+          targetY: screen.y,
+          targetScale: screen.scale,
+          ready: true,
         });
-        lineElements.push(el);
-      }
-      (line as any).letterElements = lineElements;
-    });
-
-    const lineSpeedMultipliers = [0.8, 1, 0.7, 0.9];
-
-    const updateTargetPositions = (scrollProgress = 0) => {
-      paths.forEach((line: any, lineIndex) => {
-        line.letterElements.forEach((element: HTMLDivElement, i: number) => {
-          let tRaw =
-            (i / (lettersPerLine - 1) + scrollProgress * lineSpeedMultipliers[lineIndex]) % 1;
-          const t = tRaw < 0 ? tRaw + 1 : tRaw;
-          const point = line.curve.getPoint(t);
-          const vector = point.clone().project(lettersCamera);
-          const positions = letterPositions.get(element);
-
-          positions.target = {
-            x: (-vector.x * 0.5 + 0.5) * window.innerWidth,
-            y: (-vector.y * 0.5 + 0.5) * window.innerHeight,
-          };
-        });
-      });
-    };
-
-    const updateLetterPositions = () => {
-      letterPositions.forEach((positions, element) => {
-        // Instant position update - no animation/lerp
-        positions.current.x = positions.target.x;
-        positions.current.y = positions.target.y;
-        element.style.transform = `translate(-50%, -50%) translate3d(${positions.current.x}px, ${positions.current.y}px, 0px)`;
-      });
-    };
-
-    // Simple fade-in animation for containers
-    requestAnimationFrame(() => {
-      const targets = [
-        gridCanvasRef.current,
-        webglContainerRef.current,
-      ].filter(Boolean);
-      if (targets.length > 0) {
-        gsap.fromTo(
-          targets,
-          { opacity: 0 },
-          { opacity: 1, duration: 0.6, ease: "power2.out" }
-        );
       }
     });
 
-    // Main scroll trigger. pin:true holds the section in place while the
-    // user scrolls vertically, so the cards scroll horizontally through the
-    // pinned viewport. Without the pin the section just flies past and the
-    // cards never travel.
+    const updateLetterTargets = (progress: number): void => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      for (const letter of letters) {
+        const row = ROW_CONFIG[letter.lineIndex];
+        const t =
+          (letter.index / (LETTERS_PER_LINE - 1) +
+            progress * LINE_SPEED_MULTIPLIERS[letter.lineIndex]) %
+          1;
+        const world = pathPoint(t, row.yPos, row.amplitude);
+        const screen = projectToScreen(world, w, h);
+        letter.targetX = screen.x;
+        letter.targetY = screen.y;
+        letter.targetScale = screen.scale;
+      }
+    };
+
+    const updateLetterElements = (): void => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const fade = Math.min(200, w * 0.13);
+      const baseOp = 0.75;
+
+      for (const letter of letters) {
+        const dx = letter.targetX - letter.currentX;
+        // Snap on wrap-around so letters don't slide across the whole screen
+        if (Math.abs(dx) > w * 0.5) {
+          letter.currentX = letter.targetX;
+          letter.currentY = letter.targetY;
+          letter.currentScale = letter.targetScale;
+        } else {
+          letter.currentX = lerp(letter.currentX, letter.targetX, 0.12);
+          letter.currentY = lerp(letter.currentY, letter.targetY, 0.12);
+          letter.currentScale = lerp(
+            letter.currentScale,
+            letter.targetScale,
+            0.12,
+          );
+        }
+
+        let op = baseOp;
+        if (letter.currentX < fade) op *= Math.max(0, letter.currentX / fade);
+        else if (letter.currentX > w - fade)
+          op *= Math.max(0, (w - letter.currentX) / fade);
+        if (letter.currentY < fade * 0.5)
+          op *= Math.max(0, letter.currentY / (fade * 0.5));
+        else if (letter.currentY > h - fade * 0.5)
+          op *= Math.max(0, (h - letter.currentY) / (fade * 0.5));
+
+        const off =
+          letter.currentX < -200 ||
+          letter.currentX > w + 200 ||
+          letter.currentY < -200 ||
+          letter.currentY > h + 200;
+
+        letter.el.style.opacity = off ? "0" : String(op);
+        letter.el.style.transform = `translate3d(${letter.currentX}px, ${letter.currentY}px, 0) translate(-50%, -50%) scale(${letter.currentScale})`;
+      }
+    };
+
+    // --- Cards ---
+    const measureMoveDistance = (): number => {
+      const container = cardsContainerRef.current;
+      if (!container) return window.innerWidth * 2.5;
+      const cards = container.querySelectorAll<HTMLElement>(".showcase-card");
+      const last = cards[cards.length - 1];
+      if (!last) return window.innerWidth * 2.5;
+      gsap.set(container, { x: 0 });
+      const rect = last.getBoundingClientRect();
+      const dist = rect.left + rect.width / 2 - window.innerWidth / 2;
+      gsap.set(container, { x: -dist * scrollProgress });
+      return Math.max(dist, window.innerWidth * 1.5);
+    };
+
     const st = ScrollTrigger.create({
       trigger: sectionRef.current,
       start: "top top",
-      end: "+=2200",
+      end: "+=600%",
       pin: true,
+      pinSpacing: true,
       scrub: 1,
-      onEnter: () => {
-        // Letters are visible by default (see .text-container opacity:1);
-        // nothing to fade in here.
-      },
       onUpdate: (self) => {
-        updateTargetPositions(self.progress);
+        scrollProgress = self.progress;
+        updateLetterTargets(self.progress);
         drawGrid(self.progress);
-        const targetX = -moveDistance * self.progress;
-        currentXPosition = lerp(currentXPosition, targetX, 1);
-        gsap.set(cardsContainerRef.current, { x: currentXPosition });
-
-        // Fade scroll hint
-        if (scrollHintRef.current) {
-          const hintOpacity = Math.max(0, 1 - self.progress * 5);
-          gsap.set(scrollHintRef.current, { opacity: hintOpacity });
-        }
-
-        // Update progress bar
-        if (progressBarRef.current) {
-          progressBarRef.current.style.width = `${self.progress * 100}%`;
-        }
       },
     });
-
     registerInstance(st);
 
-    const contactSection = document.getElementById('contact');
-    if (contactSection) {
-      const fadeOnVerticalTrigger = ScrollTrigger.create({
-        trigger: contactSection,
-        start: 'top bottom',
-        end: 'top 30%',
-        scrub: 1,
-        onUpdate: (self) => {
-          if (!sectionRef.current) return;
-          const opacity = 1 - self.progress * 0.9;
-          gsap.set(sectionRef.current, { opacity });
-        }
+    requestAnimationFrame(() => {
+      if (!isActive) return;
+      moveDistance = measureMoveDistance();
+      ScrollTrigger.refresh();
+    });
+
+    const updateCards = (): void => {
+      const targetX = -moveDistance * scrollProgress;
+      currentXPosition = lerp(currentXPosition, targetX, 0.1);
+      if (!cardsContainerRef.current) return;
+      gsap.set(cardsContainerRef.current, { x: currentXPosition });
+
+      const cards =
+        cardsContainerRef.current.querySelectorAll<HTMLElement>(".showcase-card");
+      cards.forEach((card) => {
+        const rect = card.getBoundingClientRect();
+        const cardCenter = rect.left + rect.width / 2;
+        const distNorm =
+          (cardCenter - window.innerWidth / 2) / (window.innerWidth / 2);
+        const clamped = Math.max(-1.2, Math.min(1.2, distNorm));
+        card.style.transform = `rotateY(${-clamped * 8}deg) translateZ(${-Math.abs(clamped) * 40}px)`;
+        card.style.transformStyle = "preserve-3d";
       });
-      registerInstance(fadeOnVerticalTrigger);
-    }
+    };
+
+    const animate = (): void => {
+      if (!isActive) return;
+      // Keep targets in sync even if ScrollTrigger onUpdate is quiet
+      updateLetterTargets(scrollProgress);
+      updateLetterElements();
+      updateCards();
+      animationFrameId = requestAnimationFrame(animate);
+    };
 
     drawGrid(0);
+    updateLetterTargets(0);
+    updateLetterElements();
+    animate();
 
-    const renderLoop = () => {
-      if (!isActive) return;
-
-      if (st) {
-        const targetX = -moveDistance * st.progress;
-        currentXPosition = lerp(currentXPosition, targetX, 0.07);
-        if (cardsContainerRef.current) {
-          gsap.set(cardsContainerRef.current, { x: currentXPosition });
-
-          const cards = cardsContainerRef.current.children;
-          const centerX = window.innerWidth / 2;
-
-          for (let i = 0; i < cards.length; i++) {
-            const card = cards[i] as HTMLElement;
-            const rect = card.getBoundingClientRect();
-            const cardCenterX = rect.left + rect.width / 2;
-
-            const distance = (cardCenterX - centerX) / (window.innerWidth * 0.5);
-            const curve = Math.sign(distance) * Math.pow(Math.abs(distance), 1.5);
-            const clampedDistance = Math.max(-1.5, Math.min(1.5, curve));
-            
-            let rotateY;
-            if (distance > 1.5) {
-              rotateY = clampedDistance * -8;
-            } else if (distance > 0.8) {
-              rotateY = clampedDistance * -15;
-            } else {
-              rotateY = clampedDistance * -20;
-            }
-            
-            const z = -Math.abs(clampedDistance) * 80;
-            const scale = 1 + Math.max(0, 1 - Math.abs(distance)) * 0.08;
-
-            // Lerp tilt toward target
-            cardTiltCurrent.current.rx = lerp(cardTiltCurrent.current.rx, cardTiltTarget.current.rx, 0.08);
-            cardTiltCurrent.current.ry = lerp(cardTiltCurrent.current.ry, cardTiltTarget.current.ry, 0.08);
-            
-            card.style.transform = `translateZ(${z}px) rotateY(${rotateY}deg) rotateX(${cardTiltCurrent.current.rx}deg) scale(${scale})`;
-          }
-        }
-      }
-
-      updateLetterPositions();
-      lettersRenderer.render(lettersScene, lettersCamera);
-      animationFrameId = requestAnimationFrame(renderLoop);
-    };
-    renderLoop();
-
-    const handleResize = () => {
+    const handleResize = (): void => {
       resizeGridCanvas();
-      const progress = st ? st.progress : 0;
-      drawGrid(progress);
-      lettersCamera.aspect = window.innerWidth / window.innerHeight;
-      lettersCamera.updateProjectionMatrix();
-      lettersRenderer.setSize(window.innerWidth, window.innerHeight);
-      updateTargetPositions(progress);
-      measureMoveDistance();
+      drawGrid(scrollProgress);
+      moveDistance = measureMoveDistance();
+      currentXPosition = -moveDistance * scrollProgress;
+      if (cardsContainerRef.current) {
+        gsap.set(cardsContainerRef.current, { x: currentXPosition });
+      }
+      // Snap letters to new projection on resize (no long lerp from old coords)
+      updateLetterTargets(scrollProgress);
+      for (const letter of letters) {
+        letter.currentX = letter.targetX;
+        letter.currentY = letter.targetY;
+        letter.currentScale = letter.targetScale;
+      }
+      updateLetterElements();
     };
     window.addEventListener("resize", handleResize);
 
     return () => {
       isActive = false;
       cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
       if (sectionRef.current) {
-        gsap.set(sectionRef.current, { opacity: 1 });
+        gsap.set(sectionRef.current, { opacity: 1, clearProps: "opacity" });
       }
-      if (webglContainerRef.current && lettersRenderer.domElement.parentNode) {
-        webglContainerRef.current.removeChild(lettersRenderer.domElement);
-      }
-      if (textContainerRef.current) {
-        textContainerRef.current.innerHTML = '';
-      }
-      lettersRenderer.dispose();
-      lettersScene.clear();
+      textContainer.innerHTML = "";
     };
   }, [isMobile, reducedMotion, registerInstance]);
 
+  // Fade showcase as contact approaches
   useEffect(() => {
-    if (reducedMotion) return;
-    if (isMobile) return;
-
-    const handleArrowKeys = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        const projects = document.getElementById('projects');
-        if (!projects) return;
-        const rect = projects.getBoundingClientRect();
-        if (rect.top < window.innerHeight && rect.bottom > 0) {
-          window.scrollBy({
-            top: e.key === 'ArrowRight' ? window.innerHeight * 0.1 : -window.innerHeight * 0.1,
-            behavior: 'smooth'
-          });
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleArrowKeys);
-    return () => window.removeEventListener('keydown', handleArrowKeys);
-  }, [isMobile]);
-
-  const cardTiltTarget = useRef<{ rx: number; ry: number }>({ rx: 0, ry: 0 });
-  const cardTiltCurrent = useRef<{ rx: number; ry: number }>({ rx: 0, ry: 0 });
-
-  // GSAP FLIP: animate cards into view on mount
-  useEffect(() => {
-    if (isMobile) return;
-    if (!cardsContainerRef.current) return;
-
-    const cards = cardsContainerRef.current.querySelectorAll('.showcase-card');
-    const tl = gsap.timeline({ delay: 0.3 });
-
-    cards.forEach((card, i) => {
-      const flipState = {
-        x: -100 + (i * 30),
-        y: 50 - (i * 20),
-        opacity: 0,
-        scale: 0.85,
-        rotation: -3 + (i * 2),
-      };
-
-      gsap.set(card, flipState);
-
-      tl.to(card, {
-        x: 0,
-        y: 0,
-        opacity: 1,
-        scale: 1,
-        rotation: 0,
-        duration: 0.7,
-        ease: 'back.out(1.4)',
-        overwrite: 'auto',
-      }, i * 0.12);
+    if (reducedMotion || isMobile) return;
+    const contactSection = document.getElementById("contact");
+    if (!contactSection) return;
+    const fadeOnVerticalTrigger = ScrollTrigger.create({
+      trigger: contactSection,
+      start: "top bottom",
+      end: "top 30%",
+      scrub: 1,
+      onUpdate: (self) => {
+        if (!sectionRef.current) return;
+        gsap.set(sectionRef.current, { opacity: 1 - self.progress * 0.9 });
+      },
     });
+    registerInstance(fadeOnVerticalTrigger);
+  }, [isMobile, reducedMotion, registerInstance]);
 
-    return () => {
-      tl.kill();
-    };
-  }, [isMobile]);
-
-  const handleMouseEnter = (project: any) => {
+  const handleMouseEnter = (
+    project: Project,
+    e: MouseEvent<HTMLDivElement>,
+  ): void => {
     if (isMobile) return;
+    cursorPosRef.current = { x: e.clientX, y: e.clientY };
     setHoveredProject(project);
     document.body.style.cursor = "none";
-
-    // Animate border and shadow with spring-like GSAP
-    const card = document.querySelector(`.showcase-card[data-project-id="${project.id}"]`) as HTMLElement;
-    if (!card) return;
-    gsap.to(card, {
-      borderColor: 'var(--accent-blue)',
-      boxShadow: '0 0 30px rgba(59, 130, 246, 0.2), 0 15px 40px rgba(0, 0, 0, 0.6)',
-      duration: 0.4,
-      ease: 'back.out(1.7)',
-      overwrite: 'auto',
-    });
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isMobile || !hoveredProject) return;
-    setCursorPos({ x: e.clientX, y: e.clientY });
-
-    // Card tilt effect - store in ref for render loop to apply
-    const card = (e.currentTarget as HTMLElement).closest('.showcase-card') as HTMLElement;
-    if (!card) return;
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    cardTiltTarget.current = { rx: -y * 8, ry: x * 8 };
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>): void => {
+    if (isMobile) return;
+    cursorPosRef.current.x = e.clientX;
+    cursorPosRef.current.y = e.clientY;
   };
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = (): void => {
     setHoveredProject(null);
     document.body.style.cursor = "auto";
-    cardTiltTarget.current = { rx: 0, ry: 0 };
-
-    // Reset card border/shadow with spring
-    const cards = document.querySelectorAll('.showcase-card');
-    gsap.to(cards, {
-      borderColor: 'var(--border)',
-      boxShadow: 'none',
-      duration: 0.4,
-      ease: 'power2.out',
-      overwrite: 'auto',
-    });
   };
 
-  const handleClick = (e: React.MouseEvent, link: string) => {
+  const handleClick = (e: MouseEvent<HTMLDivElement>, link: string): void => {
     if (link === "#wip") {
       e.preventDefault();
       return;
     }
     if (link.startsWith("/")) {
       e.preventDefault();
-      // FLIP-out animation before navigating
-      const card = (e.currentTarget as HTMLElement).closest('.showcase-card') as HTMLElement;
-      if (card) {
-        gsap.to(card, {
-          scale: 0.95,
-          opacity: 0.5,
-          duration: 0.15,
-          ease: 'power2.in',
-          onComplete: () => {
-            window.location.hash = link;
-          },
-        });
-      } else {
-        window.location.hash = link;
-      }
+      window.location.hash = link;
     }
   };
 
-  // Add data-project-id to cards for micro-interaction targeting
-  useEffect(() => {
-    if (isMobile || !cardsContainerRef.current) return;
-    const cards = cardsContainerRef.current.querySelectorAll('.showcase-card');
-    cards.forEach((card, i) => {
-      card.setAttribute('data-project-id', String(i + 1));
-    });
-  }, [isMobile]);
+  const renderProjectCard = (
+    project: Project,
+    index: number,
+    variant: "mobile" | "static",
+  ) => (
+    <div
+      key={project.id}
+      className={variant === "mobile" ? "mobile-card" : "static-card"}
+      style={{ "--card-index": index } as CSSProperties}
+      onClick={(e) => handleClick(e, project.link)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleClick(
+            e as unknown as MouseEvent<HTMLDivElement>,
+            project.link,
+          );
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`View project: ${project.title}`}
+    >
+      <div
+        className={
+          variant === "mobile" ? "mobile-card-visual" : "static-card-visual"
+        }
+      >
+        {failedImages.has(project.id) ? (
+          <div className="mobile-card-fallback">
+            <span className="mobile-card-fallback-icon">{project.title[0]}</span>
+          </div>
+        ) : (
+          <img
+            src={project.image}
+            alt={project.title}
+            style={{ objectFit: project.fit ?? "cover" }}
+            loading="lazy"
+            onError={() =>
+              setFailedImages((prev) => new Set(prev).add(project.id))
+            }
+          />
+        )}
+        {variant === "mobile" && <div className="mobile-card-accent" />}
+      </div>
+      <div
+        className={variant === "mobile" ? "mobile-card-body" : "static-card-body"}
+      >
+        <div className="mobile-card-header">
+          <span className="mobile-card-number">0{project.id}</span>
+          <h3 className="mobile-card-title">{project.title}</h3>
+        </div>
+        <p className="mobile-card-brief">{project.brief}</p>
+        <div className="mobile-card-footer">
+          <div className="mobile-card-metrics">
+            {project.metrics.map((metric, i) => (
+              <span key={i} className="mobile-card-metric">
+                {metric}
+              </span>
+            ))}
+          </div>
+          <span className="mobile-card-arrow" aria-hidden="true">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 
   if (isMobile) {
     return (
-      <section className="projects mobile-projects" id="projects" ref={sectionRef}>
+      <section
+        className="projects mobile-projects"
+        id="projects"
+        ref={sectionRef}
+      >
         <div className="projects-header">
           <div className="projects-label">What I've Built</div>
           <h2 className="projects-title">Selected Works</h2>
-          <p className="projects-subtitle">Each project solves a real problem — tap to explore</p>
+          <p className="projects-subtitle">
+            Each project solves a real problem — tap to explore
+          </p>
         </div>
         <div className="mobile-cards" ref={mobileCardsRef}>
-          {projects.map((project, index) => (
-            <div
-              key={project.id}
-              className="mobile-card"
-              style={{ '--card-index': index } as React.CSSProperties}
-              onClick={(e) => handleClick(e, project.link)}
-              onMouseEnter={(e) => handleMobileCardEnter(project.id, e)}
-              onMouseLeave={(e) => handleMobileCardLeave(project.id, e)}
-              onMouseDown={(e) => handleMobileCardDown(project.id, e)}
-              onMouseUp={(e) => handleMobileCardUp(project.id, e)}
-              onTouchStart={() => {}}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleClick(e as any, project.link);
-                }
-              }}
-              role="button"
-              tabIndex={0}
-              aria-label={`View project: ${project.title}`}
-            >
-              <div className="mobile-card-visual">
-                {failedImages.has(project.id) ? (
-                  <div className="mobile-card-fallback">
-                    <span className="mobile-card-fallback-icon">{project.title[0]}</span>
-                  </div>
-                ) : (
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    loading="lazy"
-                    onError={() => setFailedImages(prev => new Set(prev).add(project.id))}
-                  />
-                )}
-                <div className="mobile-card-accent" />
-              </div>
-              <div className="mobile-card-body">
-                <div className="mobile-card-header">
-                  <span className="mobile-card-number">0{project.id}</span>
-                  <h3 className="mobile-card-title">{project.title}</h3>
-                </div>
-                <p className="mobile-card-brief">{project.brief}</p>
-                <div className="mobile-card-footer">
-                  <div className="mobile-card-metrics">
-                    {project.metrics.map((metric, i) => (
-                      <span key={i} className="mobile-card-metric">{metric}</span>
-                    ))}
-                  </div>
-                  <span className="mobile-card-arrow">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-                    </svg>
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
+          {projects.map((project, index) =>
+            renderProjectCard(project, index, "mobile"),
+          )}
+        </div>
+      </section>
+    );
+  }
+
+  if (reducedMotion) {
+    return (
+      <section
+        className="projects static-projects"
+        id="projects"
+        ref={sectionRef}
+      >
+        <div className="projects-header">
+          <div className="projects-label">What I've Built</div>
+          <h2 className="projects-title">Selected Works</h2>
+          <p className="projects-subtitle">
+            Each project solves a real problem — click to explore
+          </p>
+        </div>
+        <div className="static-cards">
+          {projects.map((project, index) =>
+            renderProjectCard(project, index, "static"),
+          )}
         </div>
       </section>
     );
@@ -782,35 +612,29 @@ const Projects = ({ reducedMotion = false }: ProjectsProps) => {
   return (
     <section className="showcase-work" id="projects" ref={sectionRef}>
       <canvas id="grid-canvas" ref={gridCanvasRef} aria-hidden="true" />
-      <div
-        id="webgl-container"
-        ref={webglContainerRef}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          zIndex: 1,
-          pointerEvents: "none",
-          width: "100%",
-          height: "100%",
-        }}
-      />
-      <div className="text-container" ref={textContainerRef} />
+      <div className="text-container" ref={textContainerRef} aria-hidden="true" />
+
+      <p className="scroll-explore-text" aria-hidden="true">
+        Scroll to explore
+      </p>
 
       <div className="cards-wrapper">
         <div className="cards-container" ref={cardsContainerRef}>
           {projects.map((project) => (
             <div
               key={project.id}
-              className="showcase-card"
+              className={`showcase-card${project.scrim === false ? " showcase-card--no-scrim" : ""}`}
               onClick={(e) => handleClick(e, project.link)}
-              onMouseEnter={() => handleMouseEnter(project)}
+              onMouseEnter={(e) => handleMouseEnter(project, e)}
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
+                if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  handleClick(e as any, project.link);
+                  handleClick(
+                    e as unknown as MouseEvent<HTMLDivElement>,
+                    project.link,
+                  );
                 }
               }}
               role="button"
@@ -820,12 +644,23 @@ const Projects = ({ reducedMotion = false }: ProjectsProps) => {
               <div className="card-content">
                 <div className="card-img">
                   {failedImages.has(project.id) ? (
-                    <div className="card-img-fallback" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--surface)' }}>
-                      <span style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📷</span>
-                      <span style={{ color: 'var(--text-secondary)' }}>{project.title}</span>
+                    <div className="card-img-fallback">
+                      <span className="card-img-fallback-icon" aria-hidden="true">
+                        {project.title[0]}
+                      </span>
+                      <span>{project.title}</span>
                     </div>
                   ) : (
-                    <img src={project.image} alt={project.title} className="contents" onError={() => setFailedImages(prev => new Set(prev).add(project.id))} />
+                    <img
+                      src={project.image}
+                      alt={project.title}
+                      style={{ objectFit: project.fit ?? "cover" }}
+                      onError={() =>
+                        setFailedImages((prev) =>
+                          new Set(prev).add(project.id),
+                        )
+                      }
+                    />
                   )}
                 </div>
                 <div className="card-info">
@@ -833,7 +668,9 @@ const Projects = ({ reducedMotion = false }: ProjectsProps) => {
                   <p className="card-brief">{project.brief}</p>
                   <div className="card-metrics">
                     {project.metrics.map((metric, i) => (
-                      <span key={i} className="card-metric">{metric}</span>
+                      <span key={i} className="card-metric">
+                        {metric}
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -844,17 +681,8 @@ const Projects = ({ reducedMotion = false }: ProjectsProps) => {
       </div>
 
       {hoveredProject && (
-        <CustomCursor project={hoveredProject} position={cursorPos} />
+        <CustomCursor project={hoveredProject} positionRef={cursorPosRef} />
       )}
-
-      {/* Horizontal scroll progress bar */}
-      <div className="scroll-progress">
-        <div
-          className="scroll-progress-bar"
-          ref={progressBarRef}
-          style={{ width: '0%' }}
-        />
-      </div>
     </section>
   );
 };

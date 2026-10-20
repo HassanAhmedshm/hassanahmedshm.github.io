@@ -33,11 +33,11 @@ const WebGLContextHandler = () => {
 };
 
 const colors = [
-  new THREE.Color('#3b82f6'),
-  new THREE.Color('#FF7A00'),
-  new THREE.Color('#8b5cf6'),
-  new THREE.Color('#06b6d4'),
-  new THREE.Color('#f472b6'),
+  new THREE.Color('#2f80c4'),
+  new THREE.Color('#4d9fd8'),
+  new THREE.Color('#8fc4e8'),
+  new THREE.Color('#1b5e91'),
+  new THREE.Color('#2f80c4'),
 ];
 
 const FloatingParticles = () => {
@@ -189,7 +189,7 @@ const AmbientField = () => {
   return (
     <mesh ref={meshRef} geometry={geometry}>
       <meshBasicMaterial
-        color="#3b82f6"
+        color="#2f80c4"
         wireframe
         transparent
         opacity={0.04}

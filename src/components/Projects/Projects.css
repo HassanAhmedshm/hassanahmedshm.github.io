@@ -38,11 +38,7 @@
   height: 100%;
   z-index: 0;
   pointer-events: none;
-  opacity: 0;
-}
-
-#webgl-container {
-  opacity: 0;
+  opacity: 1;
 }
 
 /* Hide desktop-only elements on mobile */
@@ -52,7 +48,6 @@
   }
 
   #grid-canvas,
-  #webgl-container,
   .text-container,
   .pin-spacer {
     display: none !important;
@@ -69,26 +64,29 @@
   left: 0;
   z-index: 2;
   pointer-events: none;
-  perspective: 156.25rem;
-  perspective-origin: center;
-  opacity: 1;
+  overflow: hidden;
 }
 
 .letter-3d {
   position: absolute;
   left: 0;
   top: 0;
-  font-size: clamp(5rem, 13vw, 14rem);
+  /* Transform is set in JS before first paint — never leave at (0,0) */
+  font-size: clamp(3.25rem, 9vw, 10.5rem);
   font-weight: 800;
-  letter-spacing: -0.05em;
-  color: transparent;
-  background: var(--gradient-text);
-  -webkit-background-clip: text;
-  background-clip: text;
-  opacity: 0.85;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-align: center;
+  /* Solid color — gradient background-clip was disappearing/flickering in some GPUs */
+  color: var(--accent-blue-light);
+  opacity: 0.75;
   pointer-events: none;
-  will-change: transform;
-  text-shadow: none;
+  will-change: transform, opacity;
+  transform-origin: center center;
+  white-space: nowrap;
+  user-select: none;
+  /* Soft blue edge without background-clip */
+  text-shadow: 0.03em 0 0 rgba(47, 128, 196, 0.4);
 }
 
 .cards-wrapper {
@@ -106,21 +104,25 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 400vw;
+  /* Natural width from flex children — measured at runtime for moveDistance */
+  width: max-content;
   height: 100vh;
-  padding-left: 100vw;
+  /* 70vw (not 100vw) so the first card enters earlier in the pin */
+  padding-left: 70vw;
+  padding-right: 40vw;
   display: flex;
   align-items: center;
-  gap: 15vw;
+  gap: clamp(4rem, 10vw, 12vw);
   pointer-events: auto;
   perspective: 1500px;
 }
 
 .showcase-card {
-  width: 25vw;
-  height: 60vh;
+  width: min(30vw, 400px);
+  height: min(64vh, 600px);
+  flex-shrink: 0;
   padding: 0.5rem;
-  background-color: var(--border);
+  background-color: var(--bg-dark);
   cursor: none;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
@@ -130,27 +132,9 @@
   overflow: hidden;
 }
 
-.showcase-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--gradient-primary);
-  z-index: 2;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.showcase-card:hover::before {
-  opacity: 1;
-}
-
 .showcase-card:hover {
   border-color: var(--border-hover) !important;
   box-shadow: var(--shadow-glow-blue), 0 15px 40px rgba(0, 0, 0, 0.6) !important;
-  background-color: var(--card-bg-hover) !important;
 }
 
 .card-content {
@@ -160,17 +144,43 @@
 }
 
 .card-img {
+  position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden;
   border-radius: 8px;
-  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.5s ease;
-  will-change: transform;
+  background: var(--bg-dark);
 }
 
-.showcase-card:hover .card-img {
-  transform: scale(1.05) translateY(-10px) !important;
-  box-shadow: 0 20px 35px rgba(0, 0, 0, 0.5) !important;
+/* Scrim sits on the image box so it zooms with the image instead of drifting */
+.card-img::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 25%, rgba(0, 0, 0, 0.85) 100%);
+  opacity: 0.5;
+  transition: opacity 0.35s ease, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+}
+
+.card-img-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+}
+
+.card-img-fallback-icon {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--accent-blue);
+  opacity: 0.35;
 }
 
 .showcase-card img {
@@ -178,15 +188,33 @@
   height: 100%;
   object-fit: cover;
   filter: grayscale(20%);
-  transition: filter 0.4s ease;
-  will-change: filter;
+  transition: filter 0.4s ease, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  will-change: filter, transform;
+}
+
+/* Image and scrim zoom together, both clipped inside the card frame */
+.showcase-card:hover .card-img img,
+.showcase-card:hover .card-img::after {
+  transform: scale(1.05);
+}
+
+.showcase-card:hover .card-img::after {
+  opacity: 1;
+}
+
+/* Logo cards sit on black — no scrim needed, keeps the mark crisp */
+.showcase-card--no-scrim .card-img::after {
+  opacity: 0;
 }
 
 .showcase-card:hover img {
   filter: grayscale(0%) brightness(1.1) !important;
 }
 
-/* Custom Cursor */
+/* Custom Cursor
+   NOTE: the follow transform is written by JS on every frame.
+   Never set `transform` here — a stylesheet transform (even with !important)
+   overrides the inline one and pins the panel at (0,0). */
 .custom-cursor {
   width: 220px;
   height: 160px;
@@ -197,7 +225,6 @@
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  transform: translate(-50%, -50%) !important;
   position: relative;
 }
 
@@ -208,7 +235,7 @@
   width: 240px;
   height: 240px;
   transform: translate(-50%, -50%);
-  background: radial-gradient(circle, var(--accent-amber-glow) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--accent-blue-glow) 0%, transparent 70%);
   pointer-events: none;
   z-index: -1;
 }
@@ -273,7 +300,6 @@
   left: 0;
   right: 0;
   padding: var(--space-6);
-  background: linear-gradient(transparent, rgba(0,0,0,0.85));
   transform: translateY(30%);
   transition: transform 0.4s var(--ease-out-expo);
 }
@@ -300,6 +326,12 @@
   display: flex;
   gap: var(--space-2);
   flex-wrap: wrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.showcase-card:hover .card-metrics {
+  opacity: 1;
 }
 
 .card-metric {
@@ -570,22 +602,6 @@
   50% { transform: translateX(8px); opacity: 1; }
 }
 
-/* Scroll progress bar */
-.scroll-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--border);
-  z-index: 5;
-}
-
-.scroll-progress-bar {
-  height: 100%;
-  background: var(--gradient-primary);
-  transition: width 0.1s linear;
-}
 
 /* Scroll explore text */
 .scroll-explore-text {
@@ -601,11 +617,89 @@
   color: var(--text-tertiary);
   pointer-events: none;
   opacity: 0.6;
+  margin: 0;
+}
+
+/* Static desktop grid — reduced-motion fallback (cards always on-screen) */
+.static-projects {
+  padding: var(--space-16) 0 var(--space-24);
+  background-color: var(--bg-dark);
+  position: relative;
+  overflow: visible;
+}
+
+.static-projects .projects-header {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-8) var(--space-8);
+}
+
+.static-cards {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-8);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-6);
+}
+
+.static-card {
+  position: relative;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform 0.25s var(--ease-out-expo), box-shadow 0.25s var(--ease-out-expo), border-color 0.25s ease;
+}
+
+.static-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-glow-blue), 0 12px 32px rgba(0, 0, 0, 0.45);
+  transform: translateY(-4px);
+}
+
+.static-card:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 3px;
+}
+
+.static-card-visual {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+}
+
+.static-card-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s var(--ease-out-expo);
+}
+
+.static-card:hover .static-card-visual img {
+  transform: scale(1.04);
+}
+
+.static-card-body {
+  padding: var(--space-5);
+}
+
+@media (max-width: 900px) {
+  .static-cards {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .mobile-card {
+  .mobile-card,
+  .static-card {
     transition: none;
+  }
+
+  .static-card:hover {
+    transform: none;
   }
 }

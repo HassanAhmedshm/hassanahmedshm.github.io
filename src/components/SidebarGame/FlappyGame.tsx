@@ -15,6 +15,146 @@ const PIPE_GAP = 65;
 const GRAVITY = 0.18;
 const JUMP_FORCE = -2.8;
 const PIPE_SPEED = 1;
+/** Backing-store multiplier so the game stays crisp on hi-dpi screens */
+const CANVAS_SCALE = 2;
+const GROUND_HEIGHT = 30;
+
+const SKY_TOP = '#0b1428';
+const SKY_MID = '#101d38';
+const SKY_LOW = '#16294d';
+
+/* ─────────────── Drawing ─────────────── */
+
+const drawBackground = (ctx: CanvasRenderingContext2D, scroll: number): void => {
+  const sky = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
+  sky.addColorStop(0, SKY_TOP);
+  sky.addColorStop(0.6, SKY_MID);
+  sky.addColorStop(1, SKY_LOW);
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+  // Stars drift slowly for depth
+  ctx.fillStyle = 'rgba(148, 163, 184, 0.35)';
+  for (let i = 0; i < 20; i++) {
+    const sx = (((i * 97 + 11 - scroll * 0.18) % (GAME_WIDTH + 40)) + GAME_WIDTH + 40) % (GAME_WIDTH + 40) - 20;
+    const sy = 6 + ((i * 41) % 78);
+    ctx.fillRect(sx, sy, 1.4, 1.4);
+  }
+
+  // Parallax hills
+  ctx.fillStyle = '#0d1a33';
+  ctx.beginPath();
+  ctx.moveTo(0, GAME_HEIGHT);
+  for (let x = 0; x <= GAME_WIDTH; x += 8) {
+    const h = 24 + Math.sin((x + scroll * 0.35) / 30) * 8;
+    ctx.lineTo(x, GAME_HEIGHT - GROUND_HEIGHT - h);
+  }
+  ctx.lineTo(GAME_WIDTH, GAME_HEIGHT);
+  ctx.closePath();
+  ctx.fill();
+
+  // Ground strip with scrolling ticks
+  ctx.fillStyle = '#101d3a';
+  ctx.fillRect(0, GAME_HEIGHT - GROUND_HEIGHT, GAME_WIDTH, GROUND_HEIGHT);
+  ctx.fillStyle = 'rgba(77, 159, 216, 0.22)';
+  for (let x = -((scroll % 14) + 14) % 14; x < GAME_WIDTH; x += 14) {
+    ctx.fillRect(x, GAME_HEIGHT - GROUND_HEIGHT, 7, 2);
+  }
+  ctx.fillStyle = 'rgba(77, 159, 216, 0.35)';
+  ctx.fillRect(0, GAME_HEIGHT - GROUND_HEIGHT, GAME_WIDTH, 1);
+};
+
+const drawPipe = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  gapY: number,
+  capHeight: number,
+): void => {
+  const body = ctx.createLinearGradient(x, 0, x + PIPE_WIDTH, 0);
+  body.addColorStop(0, '#15803d');
+  body.addColorStop(0.35, '#4ade80');
+  body.addColorStop(1, '#166534');
+
+  const cap = ctx.createLinearGradient(x - 4, 0, x + PIPE_WIDTH + 4, 0);
+  cap.addColorStop(0, '#166534');
+  cap.addColorStop(0.35, '#86efac');
+  cap.addColorStop(1, '#14532d');
+
+  ctx.fillStyle = body;
+  ctx.fillRect(x, 0, PIPE_WIDTH, gapY - capHeight);
+  ctx.fillRect(x, gapY + PIPE_GAP, PIPE_WIDTH, GAME_HEIGHT - gapY - PIPE_GAP);
+
+  ctx.fillStyle = cap;
+  ctx.fillRect(x - 4, gapY - capHeight, PIPE_WIDTH + 8, capHeight);
+  ctx.fillRect(x - 4, gapY + PIPE_GAP, PIPE_WIDTH + 8, capHeight);
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+  ctx.fillRect(x + 5, 0, 3, gapY - capHeight);
+  ctx.fillRect(x + 5, gapY + PIPE_GAP, 3, GAME_HEIGHT - gapY - PIPE_GAP);
+};
+
+const drawPipes = (ctx: CanvasRenderingContext2D, pipes: Pipe[]): void => {
+  for (const pipe of pipes) {
+    drawPipe(ctx, pipe.x, pipe.gapY, 15);
+  }
+};
+
+const drawBird = (
+  ctx: CanvasRenderingContext2D,
+  y: number,
+  velocity: number,
+): void => {
+  const cx = 30 + BIRD_SIZE / 2;
+  const cy = y + BIRD_SIZE / 2;
+  const tilt = Math.max(-0.45, Math.min(1.05, velocity * 0.22));
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(tilt);
+
+  // Wing
+  ctx.fillStyle = '#1b5e91';
+  ctx.beginPath();
+  ctx.ellipse(-1.5, 2.5, 6, 3.2, -0.45, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Body
+  const body = ctx.createRadialGradient(-2.5, -2.5, 0.5, 0, 0, 10);
+  body.addColorStop(0, '#cfe6f7');
+  body.addColorStop(0.55, '#4d9fd8');
+  body.addColorStop(1, '#1b5e91');
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 8, 6.4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Belly
+  ctx.fillStyle = 'rgba(207, 230, 247, 0.75)';
+  ctx.beginPath();
+  ctx.ellipse(0.5, 2.6, 5, 2.8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Beak
+  ctx.fillStyle = '#fbbf24';
+  ctx.beginPath();
+  ctx.moveTo(6.5, -1);
+  ctx.lineTo(12, 1.4);
+  ctx.lineTo(6.5, 3);
+  ctx.closePath();
+  ctx.fill();
+
+  // Eye
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(2.8, -2.2, 2.6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.arc(3.4, -2, 1.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+};
 
 const FlappyGame = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -31,6 +171,7 @@ const FlappyGame = () => {
     pipes: [] as Pipe[],
     animationId: 0,
     score: 0,
+    scroll: 0,
   });
 
   const resetGame = useCallback(() => {
@@ -40,6 +181,7 @@ const FlappyGame = () => {
       pipes: [],
       animationId: 0,
       score: 0,
+      scroll: 0,
     };
     setScore(0);
   }, []);
@@ -64,6 +206,7 @@ const FlappyGame = () => {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0);
 
     const game = gameRef.current;
     let lastPipeSpawn = 0;
@@ -127,35 +270,10 @@ const FlappyGame = () => {
       }
 
       // Draw
-      ctx.fillStyle = '#0c1222';
-      ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-      // Draw pipes
-      ctx.fillStyle = '#3b82f6';
-      for (const pipe of game.pipes) {
-        // Top pipe
-        ctx.fillRect(pipe.x, 0, PIPE_WIDTH, pipe.gapY);
-        // Bottom pipe
-        ctx.fillRect(pipe.x, pipe.gapY + PIPE_GAP, PIPE_WIDTH, GAME_HEIGHT - pipe.gapY - PIPE_GAP);
-        
-        // Pipe edges
-        ctx.fillStyle = '#60a5fa';
-        ctx.fillRect(pipe.x - 3, pipe.gapY - 15, PIPE_WIDTH + 6, 15);
-        ctx.fillRect(pipe.x - 3, pipe.gapY + PIPE_GAP, PIPE_WIDTH + 6, 15);
-        ctx.fillStyle = '#3b82f6';
-      }
-
-      // Draw bird
-      ctx.fillStyle = '#fbbf24';
-      ctx.beginPath();
-      ctx.arc(birdLeft + BIRD_SIZE/2, game.birdY + BIRD_SIZE/2, BIRD_SIZE/2, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Bird eye
-      ctx.fillStyle = '#000';
-      ctx.beginPath();
-      ctx.arc(birdLeft + BIRD_SIZE/2 + 4, game.birdY + BIRD_SIZE/2 - 2, 3, 0, Math.PI * 2);
-      ctx.fill();
+      game.scroll += PIPE_SPEED;
+      drawBackground(ctx, game.scroll);
+      drawPipes(ctx, game.pipes);
+      drawBird(ctx, game.birdY, game.birdVelocity);
 
       game.animationId = requestAnimationFrame(gameLoop);
     };
@@ -175,36 +293,34 @@ const FlappyGame = () => {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0);
 
-    ctx.fillStyle = '#0c1222';
-    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-    // Draw static bird
-    ctx.fillStyle = '#fbbf24';
-    ctx.beginPath();
-    ctx.arc(40 + BIRD_SIZE/2, GAME_HEIGHT/2, BIRD_SIZE/2, 0, Math.PI * 2);
-    ctx.fill();
-    
-    ctx.fillStyle = '#000';
-    ctx.beginPath();
-    ctx.arc(40 + BIRD_SIZE/2 + 4, GAME_HEIGHT/2 - 2, 3, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Draw sample pipes
-    ctx.fillStyle = '#3b82f6';
-    ctx.fillRect(150, 0, PIPE_WIDTH, 60);
-    ctx.fillRect(150, 130, PIPE_WIDTH, GAME_HEIGHT - 130);
-    ctx.fillStyle = '#60a5fa';
-    ctx.fillRect(147, 45, PIPE_WIDTH + 6, 15);
-    ctx.fillRect(147, 130, PIPE_WIDTH + 6, 15);
+    drawBackground(ctx, 0);
+    drawPipes(ctx, [
+      { x: 140, gapY: 62, passed: true },
+      { x: 205, gapY: 88, passed: false },
+    ]);
+    drawBird(ctx, GAME_HEIGHT / 2 - 6, 0);
   }, [gameState]);
 
   return (
-    <div className="flappy-game" onClick={jump} onKeyDown={(e) => e.key === ' ' && jump()} tabIndex={0}>
-      <canvas 
-        ref={canvasRef} 
-        width={GAME_WIDTH} 
-        height={GAME_HEIGHT}
+    <div
+      className="flappy-game"
+      onClick={jump}
+      onKeyDown={(e) => {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          jump();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label="Flappy Dev game"
+    >
+      <canvas
+        ref={canvasRef}
+        width={GAME_WIDTH * CANVAS_SCALE}
+        height={GAME_HEIGHT * CANVAS_SCALE}
         className="flappy-canvas"
       />
       

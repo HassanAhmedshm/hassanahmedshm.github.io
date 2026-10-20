@@ -2,287 +2,87 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-scale, initial-scale=1" />
+    <title>404 · Missing world</title>
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>404 | Missing World</title>
+    <meta name="description" content="" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <title>Hassan Ahmed | Full Stack Developer</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Press+Start+2P&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&family=Press+Start+2P&display=swap"
       rel="stylesheet"
     />
-    <style>
-      * {
-        box-sizing: border-box;
-      }
 
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hassan Ahmed | Full Stack Developer</title>
+    <meta http-equiv="refresh" content="0; url=/" />
+
+    <style>
+      html, body { margin: 0; padding: 0; background: #88b763; }
       body {
-        margin: 0;
         min-height: 100vh;
         display: grid;
         place-items: center;
-        padding: 24px 16px;
-        font-family: "JetBrains Mono", "Courier New", Courier, monospace;
-        background: linear-gradient(0deg, #394c2d 0 22%, #6f9a53 22% 38%, #88b763 38% 100%);
-        color: #f8fafc;
-        position: relative;
-        overflow: hidden;
-      }
-
-      body::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background:
-          linear-gradient(90deg, rgba(0, 0, 0, 0.12) 1px, transparent 1px) 0 0 / 24px 24px,
-          linear-gradient(rgba(0, 0, 0, 0.12) 1px, transparent 1px) 0 0 / 24px 24px;
-        pointer-events: none;
-      }
-
-      .achievement {
-        position: fixed;
-        top: 1rem;
-        right: 1rem;
-        width: min(22rem, calc(100vw - 2rem));
-        border: 3px solid #2a2013;
-        background: #1a120c;
+        font-family: "JetBrains Mono", monospace;
         color: #fff8dd;
-        padding: 0.7rem 0.9rem;
-        text-align: left;
-        box-shadow: 0 6px 0 #000;
-        transform: translateY(-130%);
-        opacity: 0;
-        transition: transform 0.35s steps(6), opacity 0.2s linear;
-        z-index: 20;
       }
-
-      .achievement.show {
-        transform: translateY(0);
-        opacity: 1;
-      }
-
-      .achievement-label {
-        margin: 0 0 0.25rem;
-        color: #facc15;
-        font-size: 12px;
-        text-transform: uppercase;
-        font-family: "Press Start 2P", "JetBrains Mono", monospace;
-      }
-
-      .achievement-text {
-        margin: 0;
-        color: #f8fafc;
-        font-size: 13px;
-        font-family: "Press Start 2P", "JetBrains Mono", monospace;
-        line-height: 1.4;
-      }
-
-      .achievement-hint {
-        margin: 0.45rem 0 0;
-        color: #bbf7d0;
-        font-size: 10px;
-        text-transform: uppercase;
-        font-family: "Press Start 2P", "JetBrains Mono", monospace;
-      }
-
-      .card {
-        width: min(760px, 100%);
-        border: 3px solid #2a2013;
-        border-radius: 0;
-        padding: clamp(24px, 5vw, 36px);
+      .loader {
+        padding: 1.5rem 2rem;
         background: rgba(26, 18, 12, 0.92);
-        text-align: center;
-        position: relative;
-        z-index: 1;
+        border: 3px solid #2a2013;
         box-shadow: 0 8px 0 rgba(0, 0, 0, 0.35);
+        text-align: center;
       }
-
-      .code {
-        margin: 0;
-        font-size: clamp(54px, 12vw, 96px);
-        line-height: 1;
-        letter-spacing: 0.04em;
-        color: #fff8dd;
-        text-shadow: 4px 4px 0 #000;
-        font-family: "Press Start 2P", "JetBrains Mono", monospace;
-      }
-
-      h1 {
-        margin: 12px 0 10px;
-        font-size: clamp(20px, 3.6vw, 30px);
-        text-transform: uppercase;
-        color: #f8fafc;
-        font-family: "Press Start 2P", "JetBrains Mono", monospace;
-        line-height: 1.55;
-      }
-
-      p {
-        margin: 0 0 14px;
+      .loader p { margin: 0; }
+      .loader .small {
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
         color: #dbeafe;
       }
-
-      code {
-        display: inline-block;
-        margin-top: 6px;
-        padding: 5px 9px;
-        border: 2px solid #2a2013;
-        border-radius: 0;
-        background: #0f172a;
-        color: #fff8dd;
-      }
-
-      .actions {
-        margin-top: 18px;
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      a {
-        text-decoration: none;
-        padding: 10px 16px;
-        border: 2px solid #2a2013;
-        border-radius: 0;
-        color: #fff8dd;
-        background: #1a120c;
-        text-transform: uppercase;
-        font-size: 12px;
-        transition: transform 0.12s steps(2), filter 0.12s linear;
-        font-family: "Press Start 2P", "JetBrains Mono", monospace;
-      }
-
-      a:hover {
-        transform: translateY(-2px);
-        filter: brightness(1.08);
-      }
-
-      a.primary {
-        background: #3f6d2a;
-        border-color: #2a2013;
-        color: #ffffff;
-      }
-
-      a.primary:hover {
-        filter: brightness(1.15);
-      }
-
-      @media (max-width: 640px) {
-        .achievement {
-          width: calc(100vw - 1rem);
-          top: 0.5rem;
-          right: 0.5rem;
-        }
-      }
     </style>
-    <script>
-      (function () {
-        var knownRoutes = ["/astrov", "/optiscan", "/ag", "/lifetrack"];
-        var path = location.pathname.replace(/\/+$/, "") || "/";
-        var routeMatch = knownRoutes.find(function (route) {
-          return path === route;
-        });
-
-        if (routeMatch) {
-          location.replace(location.origin + "/#" + routeMatch + location.search);
-          return;
-        }
-
-        var messageOptions = [
-          "You are searching for a world that does not exist.",
-          "This chunk was never generated.",
-          "Looks like this portal links to nowhere.",
-          "No page here. Just missing blocks.",
-        ];
-
-        var seed = Array.prototype.reduce.call(path, function (acc, char) {
-          return acc + char.charCodeAt(0);
-        }, 0);
-        var message = messageOptions[seed % messageOptions.length];
-
-        function playAchievementChime() {
-          var AudioContextClass = window.AudioContext || window.webkitAudioContext;
-          if (!AudioContextClass) return;
-
-          var context = new AudioContextClass();
-          var master = context.createGain();
-          master.gain.value = 0.08;
-          master.connect(context.destination);
-
-          var schedule = function () {
-            var notes = [523.25, 659.25, 783.99];
-            var start = context.currentTime + 0.03;
-
-            notes.forEach(function (freq, index) {
-              var oscillator = context.createOscillator();
-              var gain = context.createGain();
-              oscillator.type = "square";
-              oscillator.frequency.value = freq;
-              gain.gain.setValueAtTime(0, start + index * 0.09);
-              gain.gain.linearRampToValueAtTime(0.28, start + index * 0.09 + 0.01);
-              gain.gain.exponentialRampToValueAtTime(0.001, start + index * 0.09 + 0.17);
-              oscillator.connect(gain);
-              gain.connect(master);
-              oscillator.start(start + index * 0.09);
-              oscillator.stop(start + index * 0.09 + 0.18);
-            });
-
-            window.setTimeout(function () {
-              context.close();
-            }, 900);
-          };
-
-          if (context.state === "suspended") {
-            context.resume().then(schedule);
-            return;
-          }
-
-          schedule();
-        }
-
-        window.addEventListener("DOMContentLoaded", function () {
-          var achievement = document.getElementById("achievement");
-          document.getElementById("requested-path").textContent = path;
-          document.getElementById("fun-message").textContent = message;
-
-          achievement.classList.add("show");
-          window.setTimeout(function () {
-            achievement.classList.remove("show");
-          }, 4200);
-
-          var played = false;
-          var soundHint = document.getElementById("achievement-hint");
-          var triggerSound = function () {
-            if (played) return;
-            played = true;
-            if (soundHint) soundHint.textContent = "";
-            playAchievementChime();
-          };
-
-          window.addEventListener("pointerdown", triggerSound, { once: true, passive: true });
-          window.addEventListener("keydown", triggerSound, { once: true });
-        });
-      })();
-    </script>
   </head>
   <body>
-    <aside class="achievement" id="achievement" aria-live="polite">
-      <p class="achievement-label">Advancement made!</p>
-      <p class="achievement-text">Searching for a page that does not exist</p>
-      <p class="achievement-hint" id="achievement-hint">Click anywhere to play chime</p>
-    </aside>
-    <main class="card">
-      <p class="code">404</p>
-      <h1>Searching for a world that does not exist</h1>
-      <p id="fun-message"></p>
-      <p>
-        Requested path:
-        <br />
-        <code id="requested-path"></code>
-      </p>
-      <div class="actions">
-        <a class="primary" href="/#/">Return to spawn</a>
-        <a href="/#/optiscan">Open another world</a>
-      </div>
+    <main class="loader">
+      <p>Loading…</p>
+      <p class="small">Spawning you back home</p>
     </main>
+
+    <!--
+      GitHub Pages fallback trick.
+
+      This 404.html is served by GH Pages for any path it can't resolve.
+      We forward the user's requested path into the SPA's hash router so the
+      React app can take over from there:
+
+        /random-path           → /#<random-path>   → React Router * → NotFound
+        /astrov                → /#/astrov          → React Router    → AstroV
+        /                      (404 doesn't fire)
+
+      Doing the redirect here means typing a direct URL still ends up at the
+      same dynamic NotFound the in-app experience uses. The href below is the
+      no-JS fallback; the <script> updates it with the correct hash path on
+      load so the user lands on the right page even when typed literally.
+    -->
+    <script>
+      (function () {
+        // Strip trailing slashes so /foo/ becomes /foo.
+        var rawPath = location.pathname.replace(/\/+$/, "") || "/";
+        // HashRouter treats "/#/x" as the route "/x".
+        var target = location.origin + "/#" + rawPath + location.search + location.hash;
+
+        // Replace (not push) so the user's browser back-button isn't polluted
+        // with the 404 detour.
+        window.location.replace(target);
+
+        // Belt-and-suspenders — if for some reason location.replace is
+        // ignored, the meta refresh already pointed at "/" which will at
+        // least land them on the home page.
+      })();
+    </script>
   </body>
 </html>
