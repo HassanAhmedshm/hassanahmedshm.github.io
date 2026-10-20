@@ -49,10 +49,31 @@ const wantsIntro = (): boolean => {
   return false;
 };
 
+/**
+ * Did the user do a hard refresh (cache-bypassing reload)?
+ *
+ * A normal reload revalidates the document and gets a 304 back, so only the
+ * response headers travel — `transferSize` stays below the body size. A hard
+ * refresh skips the cache and refetches the document, so the whole body is
+ * transferred and `transferSize` outgrows `encodedBodySize`.
+ */
+const isHardReload = (): boolean => {
+  try {
+    const nav = performance.getEntriesByType('navigation')[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    if (!nav || nav.type !== 'reload') return false;
+    return nav.transferSize > (nav.encodedBodySize || 0);
+  } catch {
+    return false;
+  }
+};
+
 function Portfolio() {
   const introSeen = (() => {
     try {
       if (wantsIntro()) return false;
+      if (isHardReload()) return false;
       return localStorage.getItem('intro-seen') === 'true';
     } catch {
       return false;

@@ -135,10 +135,11 @@ Skippable: any key or click jumps the timeline to `progress(1)`, which still fir
 
 Shown on first visit only (`intro-seen` in localStorage) and never under reduced motion.
 
-**Replaying it:** `http://localhost:5173/?intro=1` forces the intro to play even for returning visitors (`App.tsx` checks the query param before reading localStorage). Without it you have to clear the flag:
-```js
-localStorage.removeItem('intro-seen')
-```
+**Replaying it:** three ways, checked in this order in `App.tsx`:
+
+1. `?intro=1` — works before the hash (`/?intro=1`) or after it (`#/?intro=1`), so it works however the URL was typed.
+2. **A hard refresh** (Ctrl/Cmd+Shift+R) — detected from the navigation entry: a normal reload revalidates the document and gets a 304, so only headers travel and `transferSize` stays below `encodedBodySize`; a cache-bypassing reload refetches the body, so `transferSize` outgrows it.
+3. Clearing the flag: `localStorage.removeItem('intro-seen')`
 
 ## The intro overlay + loading gate
 
